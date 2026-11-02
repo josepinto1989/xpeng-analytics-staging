@@ -11,8 +11,8 @@ import { calculateDrivingPersonality } from "./driving-personality.js";
 import { buildMonthlySummaries } from "./monthly-summary.js";
 import { buildSeasonalPeriods, compareSeasonalPeriods } from "./seasonal-comparison.js";
 import { formatStoredBytes, IMPORT_REMINDER_DAY_OPTIONS, nextReminderAt } from "./persistent-history.js";
-import { createTimestampLookup, nearestTimestampPoint, telemetryPointFromChart } from "./route-sync.js";
-import { buildRouteIntelligence, routeMetricColor, routeMetricValue } from "./route-intelligence.js";
+import { telemetryPointFromChart } from "./route-sync.js";
+import { buildRouteIntelligence, routeMetricColor, routeMetricValue, routePointForTelemetry } from "./route-intelligence.js";
 import { buildGlobalSearchIndex, searchGlobalIndex } from "./global-search.js";
 import { downloadInsightCard } from "./insight-card.js";
 import { detectLikelyImportGaps } from "./drive-backup-metadata.js";
@@ -301,7 +301,6 @@ function RouteMap({ gps, timeline, telemetry, t, locale }) {
   const [tileError,setTileError]=useState(false),[colorMode,setColorMode]=useState("speed"),[activeElevation,setActiveElevation]=useState(null);
   const routeModel=useMemo(()=>buildRouteIntelligence(gps?.segments,telemetry),[gps?.segments,telemetry]);
   const routePoints=routeModel.points;
-  const routeLookup=useMemo(()=>createTimestampLookup(routePoints),[routePoints]);
   useEffect(()=>{if(colorMode!=="route"&&!routeModel.available[colorMode])setColorMode("route");},[colorMode,routeModel.available]);
   useEffect(() => {
     let disposed = false, map = null;
@@ -333,7 +332,7 @@ function RouteMap({ gps, timeline, telemetry, t, locale }) {
       if(frame!==null)return;
       frame=requestAnimationFrame(()=>{
         frame=null;
-        const map=mapRef.current,L=leafletRef.current,activePoint=nearestTimestampPoint(routeLookup,pending),status=statusRef.current;
+        const map=mapRef.current,L=leafletRef.current,activePoint=routePointForTelemetry(routePoints,pending),status=statusRef.current;
         if(!map||!L)return;
         if(!activePoint){activeMarkerRef.current?.remove();activeMarkerRef.current=null;setActiveElevation(null);if(status){status.textContent=t("mapChartHint");status.classList.remove("is-active");}return;}
         const position=[activePoint.lat,activePoint.lon],label=`${t("mapChartPosition")} · ${secondTimeText(activePoint.timestampUtc,locale)}`;
@@ -346,10 +345,11 @@ function RouteMap({ gps, timeline, telemetry, t, locale }) {
     };
     timeline.update=update;
     return()=>{if(frame!==null)cancelAnimationFrame(frame);if(timeline.update===update)timeline.update=()=>{};};
-  },[locale,routeLookup,t,timeline]);
+  },[locale,routePoints,t,timeline]);
   return <div className="route-map-wrap">
     <div className="route-map-toolbar"><div><strong>{t("routeMap")}</strong><small>{t("routeMapLocalTrace")}</small></div><div className="route-map-controls"><label><span>{t("routeColourBy")}</span><select value={colorMode} onChange={(event)=>setColorMode(event.currentTarget.value)}><option value="route">{t("routeColour_route")}</option>{["speed","power","regeneration","consumption"].filter((mode)=>routeModel.available[mode]).map((mode)=><option key={mode} value={mode}>{t(`routeColour_${mode}`)}</option>)}</select></label><span ref={statusRef} className="route-map-sync">{t("mapChartHint")}</span></div></div>
     <div ref={containerRef} className="route-map has-tiles" aria-label={t("routeMap")}/>
+    {colorMode!=="route"?<div className="route-colour-legend" aria-hidden="true"><span>{t(`routeColour_${colorMode}`)}</span><i style={{background:`linear-gradient(90deg, ${routeMetricColor(colorMode,-40)}, ${routeMetricColor(colorMode,0)}, ${routeMetricColor(colorMode,60)}, ${routeMetricColor(colorMode,160)})`}}/><small>{t("routeColourLow")}</small><small>{t("routeColourHigh")}</small></div>:null}
     <div className="route-map-meta"><span>{t("gpsSource")}: <strong>{gps.sourceName}</strong></span><span>{t("matchConfidence")}: <strong>{num(gps.confidenceScore,locale,0)}%</strong></span><span>{t("gpsMatchCoverage")}: <strong>{num(gps.coveragePct,locale,0)}%</strong></span><span>{num(gps.points,locale,0)} {t("gpsPointsLower")}</span>{gps.trimMeters?<span>{t("trimmedRouteEnds")}: {num(gps.trimMeters,locale,0)} m</span>:null}</div>
     {routeModel.elevation.length>2?<div className="route-elevation"><strong>{t("routeElevation")}</strong><Chart height={150}><AreaChart data={routeModel.elevation} margin={{top:10,right:12,left:-12}}><CartesianGrid stroke="var(--grid)" vertical={false}/><XAxis dataKey="distanceKm" unit=" km" tick={{fill:"var(--muted)",fontSize:8}}/><YAxis unit=" m" tick={{fill:"var(--muted)",fontSize:8}}/><Tip locale={locale} suffix=" m"/>{activeElevation!=null?<ReferenceLine x={activeElevation} stroke={C.violet} strokeWidth={2}/>:null}<Area dataKey="elevationM" name={t("elevation")} stroke={C.violet} fill="rgba(138,130,213,.16)"/></AreaChart></Chart></div>:null}
     {gps.routeContext?<div className="route-context-estimate"><div><strong>{t("gpsDrivingContext")}</strong><small>{t("gpsDrivingContextHelp")}</small></div><span className={`route-context-badge is-${gps.routeContext.dominant}`}>{t(`context_${gps.routeContext.dominant}`)}</span><div className="route-context-shares"><span>{t("context_urban")} <b>{num(gps.routeContext.shares?.urban,locale,0)}%</b></span><span>{t("context_road")} <b>{num(gps.routeContext.shares?.road,locale,0)}%</b></span><span>{t("context_motorway")} <b>{num(gps.routeContext.shares?.motorway,locale,0)}%</b></span></div></div>:null}

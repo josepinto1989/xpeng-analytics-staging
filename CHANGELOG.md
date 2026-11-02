@@ -4,6 +4,15 @@ All notable public changes are documented here.
 
 ## Unreleased
 
+## 2.7.0-beta.2 — 2026-11-02
+
+- Fixed route colouring when GPX speed is absent or the GPX and XPENG clocks
+  do not exactly match.
+- Fixed the journey cursor alignment used by the route marker and elevation
+  profile, with a progress-based fallback for clock-shifted recordings.
+- Added a visible route-colour legend and stopped treating missing telemetry as
+  zero-valued telemetry.
+
 ## 2.7.0-beta.1 — 2026-11-02
 
 - Added journey-route colouring by speed, power, regeneration, or estimated
