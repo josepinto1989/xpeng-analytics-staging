@@ -4,6 +4,13 @@ All notable public changes are documented here.
 
 ## Unreleased
 
+## 2.5.1-beta.1 — 2026-11-02
+
+- Reworked the Parked Energy investigator into a compact four-card summary.
+- Reduced the investigator chart height and tightened its responsive layout so
+  the pattern chart and stops to review remain visible together more often.
+- Kept the Phase 18 public Beta isolated from the stable production website.
+
 ## 2.4.0 — 2026-10-27
 
 - Added personal, business, commute, and custom journey classification plus
