@@ -38,3 +38,7 @@ The stable website remains available at:
 Please report the browser, device, XPENG model, imported period, and the exact
 steps that produced an unexpected result. Do not attach private vehicle data to
 a public issue unless it has been deliberately anonymised.
+
+Report Beta problems at:
+
+<https://github.com/josepinto1989/xpeng-analytics-staging/issues>

@@ -30,7 +30,7 @@
   ·
   <a href="docs/USER_GUIDE.md">User guide</a>
   ·
-  <a href="https://github.com/josepinto1989/xpeng-analytics/issues">Report a problem</a>
+  <a href="https://github.com/josepinto1989/xpeng-analytics-staging/issues">Report a Beta problem</a>
   ·
   <a href="https://ko-fi.com/mpinto">Support the project</a>
 </p>

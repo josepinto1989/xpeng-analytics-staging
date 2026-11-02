@@ -29,6 +29,7 @@ import {
 
 const Dashboard = React.lazy(() => import("./Dashboard.jsx"));
 const BETA_CHANNEL = import.meta.env.VITE_RELEASE_CHANNEL === "beta";
+const ISSUE_URL = BETA_CHANNEL ? "https://github.com/josepinto1989/xpeng-analytics-staging/issues" : "https://github.com/josepinto1989/xpeng-analytics/issues";
 
 function BetaBanner({ t }) {
   if (!BETA_CHANNEL) return null;
@@ -1331,7 +1332,7 @@ export default function App() {
         </div>
       </section> : null}
 
-      <footer className="site-footer"><span>{t("unofficial")}</span><span>{t("ownerLabel")}: Miguel Pinto</span><span>v{APP_VERSION}</span><a href={`${import.meta.env.BASE_URL}about.html`} target="_blank" rel="noreferrer">{t("aboutProject")}</a><a href={`${import.meta.env.BASE_URL}privacy.html`} target="_blank" rel="noreferrer">{t("privacyPolicy")}</a><a href="https://github.com/josepinto1989/xpeng-analytics/issues" target="_blank" rel="noreferrer">{t("reportIssue")}</a><a href="https://ko-fi.com/mpinto" target="_blank" rel="noreferrer">Ko-fi</a></footer>
+      <footer className="site-footer"><span>{t("unofficial")}</span><span>{t("ownerLabel")}: Miguel Pinto</span><span>v{APP_VERSION}</span><a href={`${import.meta.env.BASE_URL}about.html`} target="_blank" rel="noreferrer">{t("aboutProject")}</a><a href={`${import.meta.env.BASE_URL}privacy.html`} target="_blank" rel="noreferrer">{t("privacyPolicy")}</a><a href={ISSUE_URL} target="_blank" rel="noreferrer">{t("reportIssue")}</a><a href="https://ko-fi.com/mpinto" target="_blank" rel="noreferrer">Ko-fi</a></footer>
       {tutorialMode ? <TutorialOverlay steps={tutorialSteps} onComplete={finishTutorial} onSkip={skipTutorial} t={t} /> : null}
       {driveRefreshDialog}
     </main>
