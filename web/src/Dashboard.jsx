@@ -12,7 +12,7 @@ import { buildMonthlySummaries } from "./monthly-summary.js";
 import { buildSeasonalPeriods, compareSeasonalPeriods } from "./seasonal-comparison.js";
 import { formatStoredBytes, IMPORT_REMINDER_DAY_OPTIONS, nextReminderAt } from "./persistent-history.js";
 import { telemetryPointFromChart } from "./route-sync.js";
-import { buildRouteIntelligence, routeMetricColor, routeMetricValue, routePointForTelemetry } from "./route-intelligence.js";
+import { buildRouteIntelligence, createRouteTimestampLookup, routeMetricColor, routeMetricValue, routePointForTelemetry } from "./route-intelligence.js";
 import { buildGlobalSearchIndex, searchGlobalIndex } from "./global-search.js";
 import { downloadInsightCard } from "./insight-card.js";
 import { detectLikelyImportGaps } from "./drive-backup-metadata.js";
@@ -32,11 +32,10 @@ import { buildTyreObservations } from "./tyre-observations.js";
 const Replay = React.lazy(() => import("./Replay.jsx"));
 const MyCharts = React.lazy(() => import("./MyCharts.jsx"));
 const navGroups = [
-  { key: null, items: ["overview"] },
-  { key: "driving", items: ["journeys", "driving", "activity", "trends", "replay"] },
-  { key: "vehicle", items: ["charging", "battery", "tyres"] },
-  { key: "tools", items: ["insights", "ownership", "compare", "highlights", "mycharts", "report"] },
-  { key: "data", items: ["quality", "data"] },
+  { key: null, items: ["overview", "journeys", "charging", "battery", "insights", "data"] },
+  { key: "driving", items: ["driving", "activity", "trends", "replay"] },
+  { key: "vehicle", items: ["tyres"] },
+  { key: "tools", items: ["ownership", "compare", "highlights", "mycharts", "report", "quality"] },
 ];
 const sections = navGroups.flatMap((group) => group.items);
 const iconPaths = {
@@ -69,6 +68,7 @@ const signalLabels = {
 };
 const phaseKeys = { runtime_load:"phaseRuntimeLoad", engine_init:"phaseEngineInit", archive_write:"phaseArchiveWrite", archive_import:"phaseArchiveImport", analytics_rebuild:"phaseAnalyticsRebuild", validation:"phaseValidation", history_read:"phaseHistoryRead", history_export:"phaseHistoryExport", history_export_complete:"phaseHistoryExportComplete", persistent_history_save:"phasePersistentHistorySave", persistent_history_saved:"phasePersistentHistorySaved", drive_backup_save:"phaseDriveBackupSave", drive_backup_saved:"phaseDriveBackupSaved", drive_backup_open:"phaseDriveBackupOpen", drive_original_archive:"phaseDriveOriginalArchive", drive_history_refresh:"phaseDriveHistoryRefresh", complete:"phaseComplete", reset:"phaseReset", native_ready:"phaseNativeReady", native_scan:"phaseNativeScan", native_parse:"phaseNativeParse", native_merge:"phaseNativeMerge", native_analytics:"phaseNativeAnalytics", native_snapshot:"phaseNativeSnapshot", gps_parse:"phaseGpsParse", gps_match:"phaseGpsMatch" };
 const safe = (rows) => Array.isArray(rows) ? rows : [];
+const finiteValue = (value) => value !== null && value !== undefined && value !== "" && Number.isFinite(Number(value));
 const newestFirst = (rows) => safe(rows).slice().sort((a, b) => String(b?.startedAtUtc || b?.date || "").localeCompare(String(a?.startedAtUtc || a?.date || "")));
 const sum = (rows, field) => safe(rows).reduce((total, row) => total + (Number(row?.[field]) || 0), 0);
 const maximum = (rows, field) => { const values = safe(rows).map((row)=>Number(row?.[field])).filter(Number.isFinite); return values.length ? Math.max(...values) : null; };
@@ -180,7 +180,7 @@ function ChargingTooltip({ active, label, series, locale, t, units }) {
     [t("power"), point.powerKw, "kW"], [t("peakPower"), point.powerPeakKw, "kW"], [t("soc"), point.socPct, "%"],
     [t("voltage"), point.voltageV, "V"], [t("current"), point.currentA, "A"],
     [t("batteryTemperature"), temperatureValue(point.batteryTempC, units.system), temperatureUnit(units.system)],
-  ].filter(([, value]) => Number.isFinite(Number(value)));
+  ].filter(([, value]) => finiteValue(value));
   return <div className="telemetry-tooltip"><strong>{t("elapsedTime")}: {num(point.elapsedMinutes, locale, 1)} {t("minuteShort")}</strong>{rows.map(([name,value,unit])=><span key={name}><i/>{name}<b>{num(value,locale,2)} {unit}</b></span>)}</div>;
 }
 function ChargingTip({ series, locale, t, units }) { return <Tooltip cursor={{ stroke: "var(--muted)", strokeWidth: 1, strokeDasharray: "4 4" }} content={<ChargingTooltip series={series} locale={locale} t={t} units={units}/>} />; }
@@ -301,6 +301,7 @@ function RouteMap({ gps, timeline, telemetry, t, locale }) {
   const [tileError,setTileError]=useState(false),[colorMode,setColorMode]=useState("speed"),[activeElevation,setActiveElevation]=useState(null);
   const routeModel=useMemo(()=>buildRouteIntelligence(gps?.segments,telemetry),[gps?.segments,telemetry]);
   const routePoints=routeModel.points;
+  const routeTimestampLookup=useMemo(()=>createRouteTimestampLookup(routePoints),[routePoints]);
   useEffect(()=>{if(colorMode!=="route"&&!routeModel.available[colorMode])setColorMode("route");},[colorMode,routeModel.available]);
   useEffect(() => {
     let disposed = false, map = null;
@@ -308,12 +309,20 @@ function RouteMap({ gps, timeline, telemetry, t, locale }) {
       const module = await import("leaflet");
       if (disposed || !containerRef.current) return;
       const L = module.default || module;
-      map = L.map(containerRef.current, { zoomControl: true, attributionControl: true });
+      map = L.map(containerRef.current, { zoomControl: true, attributionControl: true, preferCanvas: true });
       mapRef.current=map;leafletRef.current=L;
       const tiles=L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, crossOrigin: true, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' });
       tiles.on("tileerror",()=>setTileError(true));tiles.on("load",()=>setTileError(false));tiles.addTo(map);
       const lines = routeModel.segments.filter((segment) => segment.length > 1);
-      const layers = lines.flatMap((line) => line.slice(1).map((point,index) => L.polyline([[line[index].lat,line[index].lon],[point.lat,point.lon]], { color: routeMetricColor(colorMode,routeMetricValue(point,colorMode)), weight: 5, opacity: .92 }).addTo(map)));
+      const routePointCount=lines.reduce((total,line)=>total+line.length,0),edgeBatchSize=Math.max(1,Math.ceil(routePointCount/180));
+      const layers = lines.flatMap((line) => {
+        const batches=[];
+        for(let start=0;start<line.length-1;start+=edgeBatchSize){
+          const stop=Math.min(line.length,start+edgeBatchSize+1),points=line.slice(start,stop),sample=points[Math.floor(points.length/2)];
+          batches.push(L.polyline(points.map((point)=>[point.lat,point.lon]), { color: routeMetricColor(colorMode,routeMetricValue(sample,colorMode)), weight: 5, opacity: .92 }).addTo(map));
+        }
+        return batches;
+      });
       const points = lines.flat().map((point)=>[point.lat,point.lon]);
       if (points.length) {
         L.circleMarker(points[0], { radius: 6, color: "#0d785c", fillColor: "#20a983", fillOpacity: 1 }).bindTooltip(t("routeStart")).addTo(map);
@@ -328,11 +337,11 @@ function RouteMap({ gps, timeline, telemetry, t, locale }) {
   useEffect(()=>{
     let frame=null,pending=null;
     const update=(telemetry)=>{
-      pending=telemetry?.timestampUtc||null;
+      pending=telemetry||null;
       if(frame!==null)return;
       frame=requestAnimationFrame(()=>{
         frame=null;
-        const map=mapRef.current,L=leafletRef.current,activePoint=routePointForTelemetry(routePoints,pending),status=statusRef.current;
+        const map=mapRef.current,L=leafletRef.current,activePoint=routePointForTelemetry(routeTimestampLookup,pending),status=statusRef.current;
         if(!map||!L)return;
         if(!activePoint){activeMarkerRef.current?.remove();activeMarkerRef.current=null;setActiveElevation(null);if(status){status.textContent=t("mapChartHint");status.classList.remove("is-active");}return;}
         const position=[activePoint.lat,activePoint.lon],label=`${t("mapChartPosition")} · ${secondTimeText(activePoint.timestampUtc,locale)}`;
@@ -345,11 +354,11 @@ function RouteMap({ gps, timeline, telemetry, t, locale }) {
     };
     timeline.update=update;
     return()=>{if(frame!==null)cancelAnimationFrame(frame);if(timeline.update===update)timeline.update=()=>{};};
-  },[locale,routePoints,t,timeline]);
+  },[locale,routeTimestampLookup,t,timeline]);
   return <div className="route-map-wrap">
-    <div className="route-map-toolbar"><div><strong>{t("routeMap")}</strong><small>{t("routeMapLocalTrace")}</small></div><div className="route-map-controls"><label><span>{t("routeColourBy")}</span><select value={colorMode} onChange={(event)=>setColorMode(event.currentTarget.value)}><option value="route">{t("routeColour_route")}</option>{["speed","power","regeneration","consumption"].filter((mode)=>routeModel.available[mode]).map((mode)=><option key={mode} value={mode}>{t(`routeColour_${mode}`)}</option>)}</select></label><span ref={statusRef} className="route-map-sync">{t("mapChartHint")}</span></div></div>
+    <div className="route-map-toolbar"><div><strong>{t("routeMap")}</strong><small>{t("routeMapLocalTrace")}</small></div><div className="route-map-controls"><label><span>{t("routeColourBy")}</span><select value={colorMode} onChange={(event)=>setColorMode(event.currentTarget.value)}><option value="route">{t("routeColour_route")}</option>{["speed","power","regeneration","consumption"].filter((mode)=>routeModel.available[mode]).map((mode)=><option key={mode} value={mode}>{t(`routeColour_${mode}`)}</option>)}</select></label><span ref={statusRef} className="route-map-sync" aria-live="polite">{t("mapChartHint")}</span></div></div>
     <div ref={containerRef} className="route-map has-tiles" aria-label={t("routeMap")}/>
-    {colorMode!=="route"?<div className="route-colour-legend" aria-hidden="true"><span>{t(`routeColour_${colorMode}`)}</span><i style={{background:`linear-gradient(90deg, ${routeMetricColor(colorMode,-40)}, ${routeMetricColor(colorMode,0)}, ${routeMetricColor(colorMode,60)}, ${routeMetricColor(colorMode,160)})`}}/><small>{t("routeColourLow")}</small><small>{t("routeColourHigh")}</small></div>:null}
+    {colorMode!=="route"?<div className="route-colour-legend"><span>{t(`routeColour_${colorMode}`)}</span><i aria-hidden="true" style={{background:`linear-gradient(90deg, ${routeMetricColor(colorMode,-40)}, ${routeMetricColor(colorMode,0)}, ${routeMetricColor(colorMode,60)}, ${routeMetricColor(colorMode,160)})`}}/><small>{t("routeColourLow")}</small><small>{t("routeColourHigh")}</small></div>:null}
     <div className="route-map-meta"><span>{t("gpsSource")}: <strong>{gps.sourceName}</strong></span><span>{t("matchConfidence")}: <strong>{num(gps.confidenceScore,locale,0)}%</strong></span><span>{t("gpsMatchCoverage")}: <strong>{num(gps.coveragePct,locale,0)}%</strong></span><span>{num(gps.points,locale,0)} {t("gpsPointsLower")}</span>{gps.trimMeters?<span>{t("trimmedRouteEnds")}: {num(gps.trimMeters,locale,0)} m</span>:null}</div>
     {routeModel.elevation.length>2?<div className="route-elevation"><strong>{t("routeElevation")}</strong><Chart height={150}><AreaChart data={routeModel.elevation} margin={{top:10,right:12,left:-12}}><CartesianGrid stroke="var(--grid)" vertical={false}/><XAxis dataKey="distanceKm" unit=" km" tick={{fill:"var(--muted)",fontSize:8}}/><YAxis unit=" m" tick={{fill:"var(--muted)",fontSize:8}}/><Tip locale={locale} suffix=" m"/>{activeElevation!=null?<ReferenceLine x={activeElevation} stroke={C.violet} strokeWidth={2}/>:null}<Area dataKey="elevationM" name={t("elevation")} stroke={C.violet} fill="rgba(138,130,213,.16)"/></AreaChart></Chart></div>:null}
     {gps.routeContext?<div className="route-context-estimate"><div><strong>{t("gpsDrivingContext")}</strong><small>{t("gpsDrivingContextHelp")}</small></div><span className={`route-context-badge is-${gps.routeContext.dominant}`}>{t(`context_${gps.routeContext.dominant}`)}</span><div className="route-context-shares"><span>{t("context_urban")} <b>{num(gps.routeContext.shares?.urban,locale,0)}%</b></span><span>{t("context_road")} <b>{num(gps.routeContext.shares?.road,locale,0)}%</b></span><span>{t("context_motorway")} <b>{num(gps.routeContext.shares?.motorway,locale,0)}%</b></span></div></div>:null}
@@ -359,7 +368,7 @@ function RouteMap({ gps, timeline, telemetry, t, locale }) {
 }
 
 function MotorTelemetryPanel({ series, segments, locale, t, units }) {
-  const front=series.some((row)=>Number.isFinite(Number(row.frontMotorRpm))||Number.isFinite(Number(row.frontMotorTorqueNm))),rear=series.some((row)=>Number.isFinite(Number(row.rearMotorRpm))||Number.isFinite(Number(row.rearMotorTorqueNm)));
+  const front=series.some((row)=>finiteValue(row.frontMotorRpm)||finiteValue(row.frontMotorTorqueNm)),rear=series.some((row)=>finiteValue(row.rearMotorRpm)||finiteValue(row.rearMotorTorqueNm));
   if(!front&&!rear)return null;
   const type=front&&rear?"awd":front?"front":"rear",max=(field)=>maximum(segments,field);
   return <Panel title={t("motorTelemetry")} subtitle={t(`motorTelemetry_${type}`)} action={<span className={`powertrain-badge is-${type}`}>{t(`powertrain_${type}`)}</span>}><div className="metric-grid detail-metrics motor-metrics">{front?<><Metric tone="cyan" label={t("frontMotorSpeed")} value={num(max("maxFrontMotorRpm"),locale,0)} unit=" rpm"/><Metric tone="cyan" label={t("frontMotorTorque")} value={num(max("maxFrontTorqueNm"),locale)} unit=" Nm"/><Metric label={t("frontRotorTemperature")} value={num(temperatureValue(max("maxFrontRotorTempC"),units.system),locale)} unit={` ${temperatureUnit(units.system)}`}/></>:null}{rear?<><Metric tone="amber" label={t("rearMotorSpeed")} value={num(max("maxRearMotorRpm"),locale,0)} unit=" rpm"/><Metric tone="amber" label={t("rearMotorTorque")} value={num(max("maxRearTorqueNm"),locale)} unit=" Nm"/><Metric label={t("rearRotorTemperature")} value={num(temperatureValue(max("maxRearRotorTempC"),units.system),locale)} unit={` ${temperatureUnit(units.system)}`}/></>:null}</div><Chart height={230}><LineChart data={series} margin={{top:12,right:12,left:-8}}><CartesianGrid stroke="var(--grid)" vertical={false}/><XAxis dataKey="elapsed" hide/><YAxis unit=" Nm" tick={{fill:"var(--muted)",fontSize:9}}/><Tip locale={locale} suffix=" Nm"/><Legend wrapperStyle={{fontSize:9}}/>{front?<Line dataKey="frontMotorTorqueNm" name={t("frontMotorTorque")} stroke={C.cyan} dot={false}/>:null}{rear?<Line dataKey="rearMotorTorqueNm" name={t("rearMotorTorque")} stroke={C.amber} dot={false}/>:null}</LineChart></Chart></Panel>;
@@ -384,7 +393,7 @@ function JourneyDetail({ selected, trips, locale, t, units }) {
   }, [segments, selected.startedAtUtc, units.pressure, units.system]);
   const maxOf = (field) => maximum(segments, field);
   const telemetryGapCount = sum(segments, "gapCount");
-  const hasSeries = (fields) => series.some((row) => fields.some((field) => Number.isFinite(Number(row[field]))));
+  const hasSeries = (fields) => series.some((row) => fields.some((field) => finiteValue(row[field])));
   return <JourneyTimelineContext.Provider value={timeline}><div className="detail-stack journey-detail-stack"><Panel title={`${dateText(selected.startedAtUtc, locale)} · ${timeText(selected.startedAtUtc, locale)}`} subtitle={`${duration(selected.durationMinutes, t)} · ${segments.length} ${t("segmentsLower")}`}><div className="metric-grid detail-metrics"><Metric label={t("distance")} value={num(distanceValue(selected.distanceKm,units.system), locale)} unit={` ${distanceUnit(units.system)}`} /><Metric label={t("consumption")} value={num(consumptionValue(selected.consumptionKwh100,units.system), locale)} unit={` ${consumptionUnit(units.system)}`} /><Metric label={t("netEnergy")} value={num(selected.netEnergyKwh, locale)} unit=" kWh" /><Metric label={t("regenerated")} value={num(selected.regeneratedKwh, locale)} unit=" kWh" note={`${num(selected.regenerationSharePct,locale)}% ${t("grossEnergy")}`} /><Metric label={t("maximumSpeed")} value={num(speedValue(selected.maxSpeedKmh,units.system), locale)} unit={` ${speedUnit(units.system)}`} /></div></Panel>
     {telemetryGapCount?<div className="data-gap-notice"><strong>{t("journeyDataGapTitle")}</strong><p>{t("journeyDataGapHelp")} ({telemetryGapCount})</p></div>:null}
     {selected.isManualGroup&&safe(selected.stopEvents).length?<Panel title={t("groupStopsAndCharging")} subtitle={t("groupStopsAndChargingHelp")}><div className="journey-group-stops">{selected.stopEvents.map((stop,index)=><article key={stop.stopId}><span><i>{index+1}</i><strong>{timeText(stop.startedAtUtc,locale)} — {timeText(stop.endedAtUtc,locale)}</strong><small>{duration(stop.durationMinutes,t)}</small></span>{stop.charges.length?<div>{stop.charges.map((charge)=><span key={charge.chargeId}><b>⚡ {charge.chargeType||t("charging")}</b><small>{num(charge.batteryEnergyKwh,locale)} kWh · {num(charge.socStartPct,locale,0)} → {num(charge.socEndPct,locale,0)}%</small></span>)}</div>:<em>{t("groupStopWithoutCharge")}</em>}</article>)}</div></Panel>:null}
@@ -477,7 +486,7 @@ function Driving({ data, locale, t, period, maxDate, customRange }) {
     const aggregate=(rows)=>[...rows.reduce((map,row)=>map.set(row.band,(map.get(row.band)||0)+Number(row.seconds||0)),new Map())].map(([band,seconds])=>({band,minutes:seconds/60}));
     const speedRows=aggregate(speed), pedalRows=aggregate(pedal), drivingMinutes=speedRows.reduce((total,row)=>total+row.minutes,0), regenerated=sum(trips,"regeneratedKwh"), used=sum(trips,"energyUsedKwh"), fast=speedRows.filter((row)=>row.band.startsWith("120")||row.band.startsWith("150")).reduce((total,row)=>total+row.minutes,0);
     const pedalMinutes=pedalRows.reduce((total,row)=>total+row.minutes,0), highPedal=pedalRows.filter((row)=>row.band.startsWith("50")||row.band.startsWith("75")).reduce((total,row)=>total+row.minutes,0);
-    const forceSamples=safe(data.telemetry).filter((row)=>inPeriod(row.timestampUtc,period,maxDate,customRange)&&Number(row.speedKmh)>=1&&Number.isFinite(Number(row.longitudinalG))&&Number.isFinite(Number(row.lateralG)));
+    const forceSamples=safe(data.telemetry).filter((row)=>inPeriod(row.timestampUtc,period,maxDate,customRange)&&Number(row.speedKmh)>=1&&finiteValue(row.longitudinalG)&&finiteValue(row.lateralG));
     const dynamicSamples=forceSamples.filter((row)=>Math.max(Math.abs(Number(row.longitudinalG)),Math.abs(Number(row.lateralG)))>=.18).length;
     const profileInputs=[
       {available:pedalMinutes>0,value:highPedal/pedalMinutes,reference:.12,weight:35},
@@ -515,7 +524,7 @@ function ChargingLab({charges,locale,t,units,onRequestRecordDetails}){
 }
 
 function ChargeTechnicalSummary({ selected, locale, t, units }) {
-  const rangeAdded = Number.isFinite(Number(selected.rangeStartKm)) && Number.isFinite(Number(selected.rangeEndKm)) ? Number(selected.rangeEndKm) - Number(selected.rangeStartKm) : null;
+  const rangeAdded = finiteValue(selected.rangeStartKm) && finiteValue(selected.rangeEndKm) ? Number(selected.rangeEndKm) - Number(selected.rangeStartKm) : null;
   return <Panel title={t("chargingTechnicalDetails")} subtitle={t("chargingTechnicalDetailsHelp")}><div className="metric-grid detail-metrics"><Metric label={t("voltageRange")} value={`${num(selected.voltageMinV,locale)}–${num(selected.voltageMaxV,locale)}`} unit=" V"/><Metric label={t("peakCurrent")} value={num(selected.peakCurrentA,locale)} unit=" A"/><Metric label={t("batteryTemperatureRange")} value={`${num(temperatureValue(selected.batteryTempStartC,units.system),locale)}–${num(temperatureValue(selected.batteryTempMaxC,units.system),locale)}`} unit={` ${temperatureUnit(units.system)}`}/><Metric label={t("displayedRangeAdded")} value={num(distanceValue(rangeAdded,units.system),locale)} unit={` ${distanceUnit(units.system)}`}/><Metric label={t("cellTemperaturePositions")} value={`${num(selected.coldestCellIndex,locale,0)} / ${num(selected.hottestCellIndex,locale,0)}`} note={t("coldestHottest")}/><Metric label={t("odometer")} value={num(distanceValue(selected.odometerKm,units.system),locale,0)} unit={` ${distanceUnit(units.system)}`}/></div></Panel>;
 }
 
@@ -569,17 +578,17 @@ function Battery({ data, locale, t, period, maxDate, customRange, units }) {
   const range100 = capacity && consumption ? capacity / consumption * 100 : null, range70 = range100 == null ? null : range100 * .7;
   const observedSeconds = sum(parking,"observedSeconds"), parkedEnergy = sum(parking,"energyKwh");
   const parkedWatts = observedSeconds ? parkedEnergy / (observedSeconds / 3600) * 1000 : null;
-  const longParking = parking.filter((row)=>Number(row.durationHours)>=6 && Number.isFinite(Number(row.socLossPerDay)));
+  const longParking = parking.filter((row)=>Number(row.durationHours)>=6 && finiteValue(row.socLossPerDay));
   const parkedLoss = median(longParking.map((row)=>row.socLossPerDay));
   const parkedLossHour = parkedLoss == null ? null : parkedLoss / 24;
   const parkedRangeLoss = capacity && consumption && parkedLoss != null ? capacity * parkedLoss / consumption : null;
   const temp = charges.filter((row)=>row.batteryTempMaxC!=null && row.efficiencyPct!=null).map((row)=>({temperature:temperatureValue(row.batteryTempMaxC,units.system),efficiency:row.efficiencyPct}));
-  const parkedPowerChart = parking.filter((row)=>Number.isFinite(Number(row.averageWatts))).slice(0,40).reverse();
+  const parkedPowerChart = parking.filter((row)=>finiteValue(row.averageWatts)).slice(0,40).reverse();
   const parkedLossChart = longParking.slice(0,40).reverse();
   const dailyByDate = new Map(daily.map((row)=>[row.date,row]));
   const batteryDaily=safe(battery.daily).filter((row)=>inPeriod(row.date,period,maxDate,customRange)).map((row)=>{const activity=dailyByDate.get(row.date), dailyConsumption=activity?.distanceKm>0 ? Number(activity.netEnergyKwh)/Number(activity.distanceKm)*100 : null; return {...row,label:row.date?.slice(5),realRangeKm:capacity&&dailyConsumption>0?capacity/dailyConsumption*100:null};});
   const rangeSamples=safe(battery.rangeSamples).filter((row)=>inPeriod(row.date,period,maxDate,customRange));
-  const tripTemperatureConsumption=safe(data.trips).filter((row)=>inPeriod(row.date,period,maxDate,customRange)&&Number(row.distanceKm)>=5&&Number.isFinite(Number(row.batteryTempMaxC))&&Number.isFinite(Number(row.consumptionKwh100))).map((row)=>({temperature:temperatureValue(row.batteryTempMaxC,units.system),consumption:consumptionValue(row.consumptionKwh100,units.system),distance:distanceValue(row.distanceKm,units.system),date:row.date}));
+  const tripTemperatureConsumption=safe(data.trips).filter((row)=>inPeriod(row.date,period,maxDate,customRange)&&Number(row.distanceKm)>=5&&finiteValue(row.batteryTempMaxC)&&finiteValue(row.consumptionKwh100)).map((row)=>({temperature:temperatureValue(row.batteryTempMaxC,units.system),consumption:consumptionValue(row.consumptionKwh100,units.system),distance:distanceValue(row.distanceKm,units.system),date:row.date}));
   const xpengRange=median(rangeSamples.map((row)=>row.impliedFullRangeKm));
   return <>
     <div className="metric-grid battery-metrics"><Metric tone="mint" label={t("realRange100")} value={num(distanceValue(range100,units.system),locale)} unit={` ${distanceUnit(units.system)}`} note={`${num(consumptionValue(consumption,units.system),locale)} ${consumptionUnit(units.system)} ${t("inPeriodLower")}`} /><Metric tone="violet" label={t("range80to10")} value={num(distanceValue(range70,units.system),locale)} unit={` ${distanceUnit(units.system)}`} note={t("usableWindow70")} /><Metric tone="cyan" label={t("xpengPredictedRange100")} value={num(distanceValue(xpengRange,units.system),locale)} unit={` ${distanceUnit(units.system)}`} note={`${rangeSamples.length} ${t("eligibleSamples")}`}/><Metric tone="mint" label={t("estimatedCapacity")} value={num(capacity,locale)} unit=" kWh" note={`${history.length} ${t("qualifiedChargesLower")}`} /><Metric tone="amber" label={t("relativeSoh")} value={num(history.at(-1)?.relativeSohPct,locale)} unit="%" note={t("notBmsReading")} /><Metric tone="cyan" label={t("parkedObservedDraw")} value={num(parkedWatts,locale)} unit=" W" note={`${num(parkedEnergy,locale)} kWh ${t("measuredWhileParked")}`} /><Metric tone="coral" label={t("parkedLossPerDay")} value={num(parkedLoss,locale,2)} unit={`%/${t("dayShort")}`} note={`${num(parkedLossHour,locale,2)}%/h · ${num(distanceValue(parkedRangeLoss,units.system),locale)} ${distanceUnit(units.system)}/${t("dayShort")}`} /></div>
@@ -608,7 +617,7 @@ function Battery({ data, locale, t, period, maxDate, customRange, units }) {
 function Tyres({ data, locale, t, period, maxDate, customRange, units }) {
   const tyres=safe(data.battery?.tyres).filter((row)=>inPeriod(row.date,period,maxDate,customRange)).map((row)=>({...row,label:row.date?.slice(5)}));
   if (!tyres.length) return <Empty t={t}/>;
-  const latest=tyres.at(-1), first=tyres[0], pressureChange=Number.isFinite(Number(latest?.averageKpa))&&Number.isFinite(Number(first?.averageKpa))?Number(latest.averageKpa)-Number(first.averageKpa):null;
+  const latest=tyres.at(-1), first=tyres[0], pressureChange=finiteValue(latest?.averageKpa)&&finiteValue(first?.averageKpa)?Number(latest.averageKpa)-Number(first.averageKpa):null;
   const pressures=tyres.flatMap((row)=>[row.frontLeftKpa,row.frontRightKpa,row.rearLeftKpa,row.rearRightKpa]).map(Number).filter(Number.isFinite);
   const pressureLabel=pressureUnitLabel(units.pressure), displayTyres=tyres.map((row)=>({...row,frontLeftKpa:pressureValue(row.frontLeftKpa,units.pressure),frontRightKpa:pressureValue(row.frontRightKpa,units.pressure),rearLeftKpa:pressureValue(row.rearLeftKpa,units.pressure),rearRightKpa:pressureValue(row.rearRightKpa,units.pressure),frontImbalanceKpa:pressureValue(row.frontImbalanceKpa,units.pressure),rearImbalanceKpa:pressureValue(row.rearImbalanceKpa,units.pressure)}));
   const displayPressures=pressures.map((value)=>pressureValue(value,units.pressure)), padding=units.pressure==="psi"?1:.1;
@@ -646,10 +655,10 @@ function Trends({ data, locale, t, period, maxDate, customRange, units }) {
   const battery=data.battery||{}, monthMap=new Map();
   const month=(date)=>{const key=String(date||"").slice(0,7);if(!key)return null;if(!monthMap.has(key))monthMap.set(key,{month:key,distanceKm:0,netEnergyKwh:0,regeneratedKwh:0,drivingHours:0,wallEnergyKwh:0,batteryEnergyKwh:0,charges:0,capacity:[],soh:[],range:[],parkedEnergyKwh:0,parkedSeconds:0,parkedLoss:[],pressure:[]});return monthMap.get(key);};
   safe(data.daily).filter((row)=>inPeriod(row.date,period,maxDate,customRange)).forEach((row)=>{const target=month(row.date);if(!target)return;target.distanceKm+=Number(row.distanceKm)||0;target.netEnergyKwh+=Number(row.netEnergyKwh)||0;target.regeneratedKwh+=Number(row.regeneratedKwh)||0;target.drivingHours+=Number(row.drivingHours)||0;target.wallEnergyKwh+=Number(row.wallEnergyKwh)||0;target.batteryEnergyKwh+=Number(row.batteryEnergyKwh)||0;target.charges+=Number(row.charges)||0;});
-  safe(battery.history).filter((row)=>inPeriod(row.date,period,maxDate,customRange)).forEach((row)=>{const target=month(row.date);if(!target)return;if(Number.isFinite(Number(row.rollingCapacityKwh)))target.capacity.push(Number(row.rollingCapacityKwh));if(Number.isFinite(Number(row.relativeSohPct)))target.soh.push(Number(row.relativeSohPct));});
-  safe(battery.daily).filter((row)=>inPeriod(row.date,period,maxDate,customRange)).forEach((row)=>{const target=month(row.date);if(target&&Number.isFinite(Number(row.impliedRangeMedianKm)))target.range.push(Number(row.impliedRangeMedianKm));});
-  safe(battery.parking).filter((row)=>inPeriod(row.startedAtUtc,period,maxDate,customRange)).forEach((row)=>{const target=month(row.startedAtUtc);if(!target)return;target.parkedEnergyKwh+=Number(row.energyKwh)||0;target.parkedSeconds+=Number(row.observedSeconds)||0;if(Number.isFinite(Number(row.socLossPerDay)))target.parkedLoss.push(Number(row.socLossPerDay));});
-  safe(battery.tyres).filter((row)=>inPeriod(row.date,period,maxDate,customRange)).forEach((row)=>{const target=month(row.date);if(target&&Number.isFinite(Number(row.averageKpa)))target.pressure.push(Number(row.averageKpa));});
+  safe(battery.history).filter((row)=>inPeriod(row.date,period,maxDate,customRange)).forEach((row)=>{const target=month(row.date);if(!target)return;if(finiteValue(row.rollingCapacityKwh))target.capacity.push(Number(row.rollingCapacityKwh));if(finiteValue(row.relativeSohPct))target.soh.push(Number(row.relativeSohPct));});
+  safe(battery.daily).filter((row)=>inPeriod(row.date,period,maxDate,customRange)).forEach((row)=>{const target=month(row.date);if(target&&finiteValue(row.impliedRangeMedianKm))target.range.push(Number(row.impliedRangeMedianKm));});
+  safe(battery.parking).filter((row)=>inPeriod(row.startedAtUtc,period,maxDate,customRange)).forEach((row)=>{const target=month(row.startedAtUtc);if(!target)return;target.parkedEnergyKwh+=Number(row.energyKwh)||0;target.parkedSeconds+=Number(row.observedSeconds)||0;if(finiteValue(row.socLossPerDay))target.parkedLoss.push(Number(row.socLossPerDay));});
+  safe(battery.tyres).filter((row)=>inPeriod(row.date,period,maxDate,customRange)).forEach((row)=>{const target=month(row.date);if(target&&finiteValue(row.averageKpa))target.pressure.push(Number(row.averageKpa));});
   const monthly=[...monthMap.values()].sort((a,b)=>a.month.localeCompare(b.month)).map((row)=>({
     ...row,label:monthText(row.month,locale),distanceDisplay:distanceValue(row.distanceKm,units.system),consumptionDisplay:consumptionValue(row.distanceKm?row.netEnergyKwh/row.distanceKm*100:null,units.system),rangeDisplay:distanceValue(median(row.range),units.system),capacityKwh:median(row.capacity),relativeSohPct:median(row.soh),parkedWatts:row.parkedSeconds?row.parkedEnergyKwh/(row.parkedSeconds/3600)*1000:null,parkedLossPct:median(row.parkedLoss),chargeEfficiencyPct:row.wallEnergyKwh?row.batteryEnergyKwh/row.wallEnergyKwh*100:null,pressureDisplay:pressureValue(median(row.pressure),units.pressure),
   }));
@@ -657,7 +666,7 @@ function Trends({ data, locale, t, period, maxDate, customRange, units }) {
   const contextTotals=["urban","road","motorway"].map((context)=>{const rows=segments.filter((row)=>row.context===context),distance=sum(rows,"distanceKm"),used=sum(rows,"energyUsedKwh"),regenerated=sum(rows,"regeneratedKwh"),net=sum(rows,"netEnergyKwh"),minutes=sum(rows,"durationMinutes"),weightedConfidence=rows.reduce((total,row)=>total+(Number(row.confidenceScore)||0)*(Number(row.distanceKm)||0),0);return {context,rows:rows.length,distanceKm:distance,distanceDisplay:distanceValue(distance,units.system),minutes,energyUsedKwh:used,regeneratedKwh:regenerated,netEnergyKwh:net,consumptionDisplay:consumptionValue(distance?net/distance*100:null,units.system),confidenceScore:distance?weightedConfidence/distance:null};});
   const totalDistance=sum(contextTotals,"distanceKm"), totalMonths=monthly.length, latest=monthly.at(-1);
   if(!monthly.length&&!segments.length)return <Empty t={t}/>;
-  const has=(field)=>monthly.some((row)=>Number.isFinite(Number(row[field])));
+  const has=(field)=>monthly.some((row)=>finiteValue(row[field]));
   return <>
     <div className="metric-grid trends-metrics"><Metric tone="mint" label={t("monthsTracked")} value={num(totalMonths,locale,0)} note={monthly.length?(monthly.length>1?`${monthly[0].label} — ${latest.label}`:latest.label):null}/><Metric tone="cyan" label={t("distance")} value={num(distanceValue(sum(monthly,"distanceKm"),units.system),locale)} unit={` ${distanceUnit(units.system)}`}/><Metric tone="violet" label={t("averageConsumption")} value={num(consumptionValue(sum(monthly,"distanceKm")?sum(monthly,"netEnergyKwh")/sum(monthly,"distanceKm")*100:null,units.system),locale)} unit={` ${consumptionUnit(units.system)}`}/><Metric tone="amber" label={t("gridEnergy")} value={num(sum(monthly,"wallEnergyKwh"),locale)} unit=" kWh" note={`${num(sum(monthly,"charges"),locale,0)} ${t("sessionsLower")}`}/></div>
     <div className="method-note"><strong>{t("longTermTrends")}</strong><p>{t("longTermTrendsHelp")}</p></div>
@@ -1082,7 +1091,8 @@ const ReportSection = memo(Report);
 const QualitySection = memo(Quality);
 
 export default function Dashboard({ data, locale, setLocale, t, busy, progress, error, onChooseAdditional, onChooseHistory, onExport, onSaveCustomCharts, onSaveJourneyGroups, onSaveOwnership, onRequestRecordDetails, onReset, onCancel, canCancel, persistence, onToggleRememberHistory, onToggleImportReminder, onSetImportReminderDays, onForgetSavedHistory, drive, onConnectDrive, onSaveDrive, onOpenDrive, onDisconnectDrive, onToggleDriveAutoSync, onToggleDriveOriginalArchive, onToggleDriveGpsArchive, onDownloadDriveOriginal, onDeleteDriveOriginal, theme, onToggleTheme, onStartTutorial }) {
-  const [section,setSection]=useState("overview"), [period,setPeriod]=useState("all"), [selectedJourneyId,setSelectedJourneyId]=useState(null), [selectedChargeId,setSelectedChargeId]=useState(null), [selectedChartId,setSelectedChartId]=useState(null), [measurementSystem,setMeasurementSystem]=useState("metric"), [pressureUnit,setPressureUnit]=useState("bar"), [settingsOpen,setSettingsOpen]=useState(false), [searchOpen,setSearchOpen]=useState(false), [compactNavigation,setCompactNavigation]=useState(()=>typeof window!=="undefined"&&window.matchMedia("(max-width: 850px)").matches);
+  const [section,setSection]=useState("overview"), [period,setPeriod]=useState("all"), [selectedJourneyId,setSelectedJourneyId]=useState(null), [selectedChargeId,setSelectedChargeId]=useState(null), [selectedChartId,setSelectedChartId]=useState(null), [measurementSystem,setMeasurementSystem]=useState("metric"), [pressureUnit,setPressureUnit]=useState("bar"), [settingsOpen,setSettingsOpen]=useState(false), [searchOpen,setSearchOpen]=useState(false), [compactNavigation,setCompactNavigation]=useState(()=>typeof window!=="undefined"&&window.matchMedia("(max-width: 1050px)").matches);
+  const [expandedNavGroups,setExpandedNavGroups]=useState(()=>new Set());
   const settingsRef=useRef(null);
   const [minDate,maxDate]=useMemo(()=>{
     const availableDates=[...safe(data.daily).map((row)=>row.date),...safe(data.trips).map((row)=>row.date),...safe(data.journeys).map((row)=>row.date),...safe(data.charges).map((row)=>row.date),...safe(data.battery?.history).map((row)=>row.date),...safe(data.battery?.parking).map((row)=>String(row.startedAtUtc||"").slice(0,10))].filter(Boolean).sort();
@@ -1101,11 +1111,12 @@ export default function Dashboard({ data, locale, setLocale, t, busy, progress, 
     return()=>{document.removeEventListener("pointerdown",dismiss);document.removeEventListener("keydown",escape);};
   },[settingsOpen]);
   useEffect(()=>{
-    const media=window.matchMedia("(max-width: 850px)"),sync=()=>{setCompactNavigation(media.matches);setSettingsOpen(false);};
+    const media=window.matchMedia("(max-width: 1050px)"),sync=()=>{setCompactNavigation(media.matches);setSettingsOpen(false);};
     sync();media.addEventListener("change",sync);return()=>media.removeEventListener("change",sync);
   },[]);
   useEffect(()=>{const shortcut=(event)=>{const editing=/^(INPUT|TEXTAREA|SELECT)$/.test(event.target?.tagName);if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==="k"){event.preventDefault();setSearchOpen(true);}else if(event.key==="/"&&!editing&&!event.ctrlKey&&!event.metaKey&&!event.altKey){event.preventDefault();setSearchOpen(true);}};document.addEventListener("keydown",shortcut);return()=>document.removeEventListener("keydown",shortcut);},[]);
-  const openSection=useCallback((target)=>{setSection(target);setSettingsOpen(false);requestAnimationFrame(()=>window.scrollTo({top:0,behavior:"auto"}));},[]);
+  const openSection=useCallback((target)=>{setSection(target);setSettingsOpen(false);const group=navGroups.find((candidate)=>candidate.key&&candidate.items.includes(target));if(group)setExpandedNavGroups((current)=>new Set(current).add(group.key));requestAnimationFrame(()=>window.scrollTo({top:0,behavior:"auto"}));},[]);
+  const toggleNavGroup=useCallback((key)=>setExpandedNavGroups((current)=>{const next=new Set(current);if(next.has(key))next.delete(key);else next.add(key);return next;}),[]);
   const openRecord=useCallback((target,id)=>{if(target==="journeys")setSelectedJourneyId(id);if(target==="charging")setSelectedChargeId(id);openSection(target);},[openSection]);
   const openInsightDetails=useCallback((target,event)=>{
     const date=String(event?.date||"").slice(0,10);
@@ -1137,12 +1148,12 @@ export default function Dashboard({ data, locale, setLocale, t, busy, progress, 
   return <div className="dashboard-shell">
     <aside className="dashboard-sidebar">
       <button className="dashboard-brand" type="button" onClick={()=>openSection("overview")} aria-label={t("nav_overview")}><span className="brand-mark"><img src={`${import.meta.env.BASE_URL}assets/xpeng-analytics-mark-minimal.png`} alt="" /></span><span className="dashboard-brand-copy"><strong>XPENG</strong><small>Analytics</small>{dataCoverage?<span className="brand-data-range" title={`${t("dataCoverage")}: ${dataCoverage}`}>{dataCoverage}</span>:null}</span></button>
-      <nav aria-label={t("navigation")}>{navGroups.map((group)=><div className={`nav-group ${group.key?"":"nav-group-primary"}`} data-tutorial={group.key||"overview"} key={group.key||"primary"}>{group.key?<span className="nav-group-label">{t(`navGroup_${group.key}`)}</span>:null}{group.items.map((item)=><button key={item} type="button" className={section===item?"is-active":""} aria-current={section===item?"page":undefined} onClick={()=>openSection(item)}><Icon name={item}/><span>{t(`nav_${item}`)}</span></button>)}</div>)}</nav>
+      <nav aria-label={t("navigation")}>{navGroups.map((group)=>{const active=group.items.includes(section),expanded=!group.key||active||expandedNavGroups.has(group.key);return <div className={`nav-group ${group.key?"is-collapsible":"nav-group-primary"} ${expanded?"is-expanded":""}`} data-tutorial={group.key||"overview"} key={group.key||"primary"}>{group.key?<button className="nav-group-toggle" type="button" aria-expanded={expanded} onClick={()=>toggleNavGroup(group.key)}><span>{t(`navGroup_${group.key}`)}</span><b aria-hidden="true">⌄</b></button>:null}<div className="nav-group-items">{group.items.map((item)=><button key={item} type="button" className={section===item?"is-active":""} aria-current={section===item?"page":undefined} onClick={()=>openSection(item)}><Icon name={item}/><span>{t(`nav_${item}`)}</span></button>)}</div></div>;})}</nav>
       <div className="sidebar-bottom">{!compactNavigation?utilityActions:null}<a className="sidebar-kofi" href="https://ko-fi.com/mpinto" target="_blank" rel="noreferrer">{t("supportCta")}</a><div className="privacy-mini"><i/><span><strong>{t("localOnly")}</strong><small>{persistence.enabled ? t("savedOnThisDevice") : t("sessionOnly")}</small></span></div><small className="sidebar-version">XPENG Analytics · v{APP_VERSION}</small></div>
     </aside>
     <main className="dashboard-main">
       <header className="dashboard-topbar"><div><span className="dashboard-eyebrow">{t("dashboard")}</span><h1>{t(`section_${section}`)}</h1><p>{t(`section_${section}_help`)}</p></div>{compactNavigation?utilityActions:null}</header>
-      <label className="mobile-nav"><span>{t("navigation")}</span><select value={section} onChange={(event)=>openSection(event.currentTarget.value)}><option value="overview">{t("nav_overview")}</option>{navGroups.filter((group)=>group.key).map((group)=><optgroup key={group.key} label={t(`navGroup_${group.key}`)}>{group.items.map((item)=><option key={item} value={item}>{t(`nav_${item}`)}</option>)}</optgroup>)}</select>{dataCoverage?<small className="mobile-data-range" title={t("dataCoverage")}>{dataCoverage}</small>:null}</label>
+      <label className="mobile-nav"><span>{t("navigation")}</span><select value={section} onChange={(event)=>openSection(event.currentTarget.value)}>{navGroups.map((group)=>group.key?<optgroup key={group.key} label={t(`navGroup_${group.key}`)}>{group.items.map((item)=><option key={item} value={item}>{t(`nav_${item}`)}</option>)}</optgroup>:group.items.map((item)=><option key={item} value={item}>{t(`nav_${item}`)}</option>))}</select>{dataCoverage?<small className="mobile-data-range" title={t("dataCoverage")}>{dataCoverage}</small>:null}</label>
       {filteredSections.includes(section)?<PeriodBar period={period} setPeriod={setPeriod} customRange={customRange} setCustomRange={setCustomRange} minDate={minDate} maxDate={maxDate} t={t}/>:null}
       {busy?<div className="dashboard-progress"><div className="dashboard-progress-heading"><strong>{Math.round(progress.percent||0)}%</strong><span>{t(phaseKeys[progress.phase]||"loadingEngine")}{progress.detail?` · ${progress.detail}`:""}</span>{canCancel?<button className="cancel-processing" type="button" onClick={onCancel}>{t("cancelProcessing")}</button>:null}</div>{["drive_backup_save","drive_original_archive","drive_history_refresh"].includes(progress.phase)?<small className="drive-progress-warning">{t("driveLongOperationWarning")}</small>:null}<div><i style={{width:`${Math.max(3,progress.percent||0)}%`}}/></div></div>:null}
       {error?<div className="dashboard-error">{t(`error_${error}`)}</div>:null}<div className="dashboard-content">{content}</div><footer className="site-footer dashboard-footer"><span>{t("unofficial")}</span><span>{t("ownerLabel")}: Miguel Pinto</span><span>v{APP_VERSION}</span><a href={`${import.meta.env.BASE_URL}about.html`} target="_blank" rel="noreferrer">{t("aboutProject")}</a><a href={`${import.meta.env.BASE_URL}privacy.html`} target="_blank" rel="noreferrer">{t("privacyPolicy")}</a><a href={ISSUE_URL} target="_blank" rel="noreferrer">{t("reportIssue")}</a><a href="https://ko-fi.com/mpinto" target="_blank" rel="noreferrer">Ko-fi</a></footer>

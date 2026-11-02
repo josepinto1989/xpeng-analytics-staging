@@ -493,15 +493,7 @@ function binnedSeries(operation, energy, status, startTime, endTime, limit = 180
       observe(samples.doorDriver, val(status, "driver_door_ajar", si)); observe(samples.doorPassenger, val(status, "passenger_door_ajar", si)); observe(samples.doorRearLeft, val(status, "rear_left_door_ajar", si)); observe(samples.doorRearRight, val(status, "rear_right_door_ajar", si)); observe(samples.trunk, val(status, "trunk_open_status", si));
       observe(samples.windowFrontLeft, val(status, "front_left_window_position", si)); observe(samples.windowFrontRight, val(status, "front_right_window_position", si)); observe(samples.windowRearLeft, val(status, "rear_left_window_position", si)); observe(samples.windowRearRight, val(status, "rear_right_window_position", si));
     }
-    rows.push({ timestampUtc: iso(operation.time[base]), elapsedMinutes: rounded((operation.time[base] - startTime) / 60, 2), speedKmh: rounded(sampleAverage(samples.speed), 1), speedPeakKmh: rounded(samples.speed.max, 1), powerKw: rounded(sampleAverage(samples.power), 2), powerPeakKw: rounded(samples.power.max, 2), socPct: rounded(samples.soc.last, 1), displayedRangeKm: rounded(samples.range.last, 1), batteryTempC: rounded(samples.temp.max, 1), acceleratorPct: rounded(sampleAverage(samples.accelerator), 1), acceleratorPeakPct: rounded(samples.accelerator.max, 1), brakePct: rounded(sampleAverage(samples.brake), 1), longitudinalG: rounded(sampleAverage(samples.longitudinal), 3), lateralG: rounded(sampleAverage(samples.lateral), 3), steeringAngleDeg: rounded(sampleAverage(samples.steering), 1), gearLevel: rounded(samples.gear.last, 0), rearMotorRpm: rounded(sampleAverage(samples.rearRpm), 0), rearMotorTorqueNm: rounded(sampleAverage(samples.rearTorque), 1), rearRotorTempC: rounded(samples.rearRotorTemp.max, 1), tyreFrontLeftKpa: rounded(sampleAverage(samples.tyreFl), 1), tyreFrontRightKpa: rounded(sampleAverage(samples.tyreFr), 1), tyreRearLeftKpa: rounded(sampleAverage(samples.tyreRl), 1), tyreRearRightKpa: rounded(sampleAverage(samples.tyreRr), 1), driverDoorOpen: rounded(samples.doorDriver.max, 0), passengerDoorOpen: rounded(samples.doorPassenger.max, 0), rearLeftDoorOpen: rounded(samples.doorRearLeft.max, 0), rearRightDoorOpen: rounded(samples.doorRearRight.max, 0), trunkState: rounded(samples.trunk.last, 0), frontLeftWindowPosition: rounded(samples.windowFrontLeft.last, 0), frontRightWindowPosition: rounded(samples.windowFrontRight.last, 0), rearLeftWindowPosition: rounded(samples.windowRearLeft.last, 0), rearRightWindowPosition: rounded(samples.windowRearRight.last, 0) });
-  }
-  const frontAt = monotonicIndex(energy.time, startTime);
-  for (const row of rows) {
-    const index = frontAt(Date.parse(row.timestampUtc) / 1000);
-    row.frontMotorRpm = rounded(val(energy, "front_motor_rpm", index), 0);
-    row.frontMotorTorqueNm = rounded(val(energy, "front_motor_torque_nm", index), 1);
-    const temperature = val(energy, "front_rotor_temp_c", index);
-    row.frontRotorTempC = rounded(finite(temperature) && temperature > 0 ? temperature : NaN, 1);
+    rows.push({ timestampUtc: iso(operation.time[base]), elapsedMinutes: rounded((operation.time[base] - startTime) / 60, 2), speedKmh: rounded(sampleAverage(samples.speed), 1), speedPeakKmh: rounded(samples.speed.max, 1), powerKw: rounded(sampleAverage(samples.power), 2), powerPeakKw: rounded(samples.power.max, 2), socPct: rounded(samples.soc.last, 1), displayedRangeKm: rounded(samples.range.last, 1), batteryTempC: rounded(samples.temp.max, 1), acceleratorPct: rounded(sampleAverage(samples.accelerator), 1), acceleratorPeakPct: rounded(samples.accelerator.max, 1), brakePct: rounded(sampleAverage(samples.brake), 1), longitudinalG: rounded(sampleAverage(samples.longitudinal), 3), lateralG: rounded(sampleAverage(samples.lateral), 3), steeringAngleDeg: rounded(sampleAverage(samples.steering), 1), gearLevel: rounded(samples.gear.last, 0), frontMotorRpm: rounded(sampleAverage(samples.frontRpm), 0), frontMotorTorqueNm: rounded(sampleAverage(samples.frontTorque), 1), frontRotorTempC: rounded(samples.frontRotorTemp.max, 1), rearMotorRpm: rounded(sampleAverage(samples.rearRpm), 0), rearMotorTorqueNm: rounded(sampleAverage(samples.rearTorque), 1), rearRotorTempC: rounded(samples.rearRotorTemp.max, 1), tyreFrontLeftKpa: rounded(sampleAverage(samples.tyreFl), 1), tyreFrontRightKpa: rounded(sampleAverage(samples.tyreFr), 1), tyreRearLeftKpa: rounded(sampleAverage(samples.tyreRl), 1), tyreRearRightKpa: rounded(sampleAverage(samples.tyreRr), 1), driverDoorOpen: rounded(samples.doorDriver.max, 0), passengerDoorOpen: rounded(samples.doorPassenger.max, 0), rearLeftDoorOpen: rounded(samples.doorRearLeft.max, 0), rearRightDoorOpen: rounded(samples.doorRearRight.max, 0), trunkState: rounded(samples.trunk.last, 0), frontLeftWindowPosition: rounded(samples.windowFrontLeft.last, 0), frontRightWindowPosition: rounded(samples.windowFrontRight.last, 0), rearLeftWindowPosition: rounded(samples.windowRearLeft.last, 0), rearRightWindowPosition: rounded(samples.windowRearRight.last, 0) });
   }
   return rows;
 }
@@ -1248,14 +1240,20 @@ export async function importHistory(source, report = () => {}) {
 export async function loadRecordDetails(state, request = {}, report = () => {}) {
   if (!state?.segmented) return { trips: state?.snapshot?.trips || [], journeys: state?.snapshot?.journeys || [], charges: state?.snapshot?.charges || [] };
   const journeyIds = new Set(request.journeyIds || []), tripIds = new Set(request.tripIds || []), chargeIds = new Set(request.chargeIds || []), keys = new Set();
-  for (const journey of state.snapshot.journeys || []) if (journeyIds.has(journey.journeyId)) keys.add(String(journey.date).slice(0, 7));
-  for (const trip of state.snapshot.trips || []) if (tripIds.has(trip.tripId) || [...journeyIds].some((journeyId) => state.snapshot.journeys.find((journey) => journey.journeyId === journeyId)?.tripIds?.includes(trip.tripId))) keys.add(String(trip.date).slice(0, 7));
+  const requestedJourneyTripIds = new Set();
+  for (const journey of state.snapshot.journeys || []) {
+    if (!journeyIds.has(journey.journeyId)) continue;
+    keys.add(String(journey.date).slice(0, 7));
+    for (const tripId of journey.tripIds || []) requestedJourneyTripIds.add(tripId);
+  }
+  for (const trip of state.snapshot.trips || []) if (tripIds.has(trip.tripId) || requestedJourneyTripIds.has(trip.tripId)) keys.add(String(trip.date).slice(0, 7));
   for (const charge of state.snapshot.charges || []) if (chargeIds.has(charge.chargeId)) keys.add(String(charge.date).slice(0, 7));
   const details = { trips: [], journeys: [], charges: [] };
   for (const key of keys) {
     const shard = state.shards.find((candidate) => candidate.key === key); if (!shard) continue;
     const full = await loadShardSnapshot(shard, report);
-    details.trips.push(...full.trips.filter((trip) => tripIds.has(trip.tripId) || [...journeyIds].some((journeyId) => full.journeys.find((journey) => journey.journeyId === journeyId)?.tripIds?.includes(trip.tripId))).map((trip) => ({ ...trip, detailLoaded: true })));
+    const shardJourneyTripIds = new Set(full.journeys.filter((journey) => journeyIds.has(journey.journeyId)).flatMap((journey) => journey.tripIds || []));
+    details.trips.push(...full.trips.filter((trip) => tripIds.has(trip.tripId) || shardJourneyTripIds.has(trip.tripId)).map((trip) => ({ ...trip, detailLoaded: true })));
     details.journeys.push(...full.journeys.filter((journey) => journeyIds.has(journey.journeyId)).map((journey) => ({ ...journey, detailLoaded: true })));
     details.charges.push(...full.charges.filter((charge) => chargeIds.has(charge.chargeId)).map((charge) => ({ ...charge, detailLoaded: true })));
   }

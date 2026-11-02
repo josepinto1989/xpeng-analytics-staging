@@ -1,12 +1,15 @@
 import assert from "node:assert/strict";
 import { assessBatteryHealth } from "../src/battery-health.js";
-import { buildRouteIntelligence, routeMetricColor, routePointForTelemetry } from "../src/route-intelligence.js";
+import { buildRouteIntelligence, createRouteTimestampLookup, routeMetricColor, routePointForTelemetry } from "../src/route-intelligence.js";
 import { buildTyreObservations } from "../src/tyre-observations.js";
 
 const route=buildRouteIntelligence([[{lat:38.7,lon:-9.1,timestampUtc:"2026-10-01T08:00:00Z",elevationM:20,gpsSpeedKmh:30},{lat:38.701,lon:-9.101,timestampUtc:"2026-10-01T08:01:00Z",elevationM:35,gpsSpeedKmh:60}]], [{timestampUtc:"2026-10-01T08:00:00Z",powerKw:12,speedKmh:30},{timestampUtc:"2026-10-01T08:01:00Z",powerKw:-20,speedKmh:60}]);
 assert.equal(route.available.elevation,true);assert.equal(route.available.regeneration,true);assert.equal(route.elevation.length,2);assert.ok(route.points[1].distanceKm>0);assert.match(routeMetricColor("speed",60),/^#[0-9a-f]{6}$/i);
 const offsetRoute=buildRouteIntelligence([[{lat:38.7,lon:-9.1,timestampUtc:"2026-10-01T10:00:00Z",elevationM:20},{lat:38.701,lon:-9.101,timestampUtc:"2026-10-01T10:01:00Z",elevationM:35}]], [{timestampUtc:"2026-10-01T08:00:00Z",powerKw:10,speedKmh:20},{timestampUtc:"2026-10-01T08:01:00Z",powerKw:80,speedKmh:90}]);
 assert.equal(offsetRoute.points[0].powerKw,10);assert.equal(offsetRoute.points[1].powerKw,80);assert.equal(routePointForTelemetry(offsetRoute.points,{timestampUtc:"2026-10-01T08:01:00Z"}),offsetRoute.points[1]);assert.notEqual(routeMetricColor("power",offsetRoute.points[0].powerKw),routeMetricColor("power",offsetRoute.points[1].powerKw));
+const routeLookup=createRouteTimestampLookup(offsetRoute.points);
+assert.equal(routePointForTelemetry(routeLookup,{timestampUtc:"2026-10-01T08:01:00Z"}),offsetRoute.points[1]);
+assert.equal(routePointForTelemetry(routeLookup,"2026-10-01T08:01:00Z"),offsetRoute.points[1]);
 const routeWithoutTelemetry=buildRouteIntelligence([[{lat:38.7,lon:-9.1,timestampUtc:"2026-10-01T10:00:00Z"},{lat:38.701,lon:-9.101,timestampUtc:"2026-10-01T10:01:00Z"}]],[]);
 assert.equal(routeWithoutTelemetry.available.speed,false);assert.equal(routeWithoutTelemetry.available.power,false);assert.equal(routeWithoutTelemetry.available.elevation,false);
 const tyres=buildTyreObservations([{date:"2026-10-01",averageKpa:255,frontImbalanceKpa:3,rearImbalanceKpa:2},{date:"2026-10-10",averageKpa:250,frontImbalanceKpa:13,rearImbalanceKpa:2},{date:"2026-10-20",averageKpa:240,frontImbalanceKpa:14,rearImbalanceKpa:2},{date:"2026-10-25",averageKpa:232,frontImbalanceKpa:15,rearImbalanceKpa:2}]);

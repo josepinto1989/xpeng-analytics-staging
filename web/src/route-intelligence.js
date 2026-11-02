@@ -56,9 +56,15 @@ export function routeMetricColor(mode, value) {
 
 export function routeMetricValue(point, mode){return mode==="speed"?point.speedKmh:mode==="power"?point.powerKw:mode==="regeneration"?point.regenerationKw:mode==="consumption"?point.consumptionKwh100:null;}
 
-export function routePointForTelemetry(points, telemetryPoint) {
-  const source=rows(points),timestampUtc=telemetryPoint?.timestampUtc;
-  if(!source.length||!timestampUtc)return null;
-  const aligned=source.map((point)=>({point,time:Date.parse(point.alignedTimestampUtc||point.timestampUtc||"")})).filter((entry)=>Number.isFinite(entry.time)).sort((left,right)=>left.time-right.time);
+export function createRouteTimestampLookup(points) {
+  return rows(points).map((point)=>({point,time:Date.parse(point.alignedTimestampUtc||point.timestampUtc||"")})).filter((entry)=>Number.isFinite(entry.time)).sort((left,right)=>left.time-right.time);
+}
+
+export function routePointForTelemetry(pointsOrLookup, telemetryPoint) {
+  const timestampUtc=typeof telemetryPoint==="string"?telemetryPoint:telemetryPoint?.timestampUtc;
+  if(!timestampUtc)return null;
+  const source=rows(pointsOrLookup);
+  if(!source.length)return null;
+  const aligned=source[0]?.point&&Number.isFinite(source[0]?.time)?source:createRouteTimestampLookup(source);
   return nearestEntry(aligned,timestampUtc)?.point||null;
 }

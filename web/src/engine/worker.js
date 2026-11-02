@@ -178,6 +178,6 @@ self.addEventListener("message", (event) => {
   queue = queue.then(() => handle(event.data)).catch((error) => {
     if (String(event.data?.type || "").startsWith("refresh_history_")) historyRefreshContext = null;
     console.error(error);
-    self.postMessage({ type: "error", code: errorCode(error), detail: String(error?.stack ?? error) });
+    self.postMessage({ type: "error", code: errorCode(error), detail: String(error?.stack ?? error), requestId: event.data?.requestId || null });
   });
 });

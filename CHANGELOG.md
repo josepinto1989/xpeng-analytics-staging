@@ -4,6 +4,23 @@ All notable public changes are documented here.
 
 ## Unreleased
 
+## 2.7.5 — 2026-11-02
+
+- Simplified the sidebar around six everyday tasks and moved specialist tools
+  into compact, expandable groups.
+- Improved spacing, typography, button sizes, focus states, card hierarchy and
+  responsive navigation without replacing the established visual identity.
+- Reduced unused space on the landing page and made file import the clearest
+  primary action, with Google Drive presented as a secondary continuation path.
+- Fixed chart-to-map synchronisation and removed repeated GPS timestamp sorting
+  from every pointer movement, making journey exploration smoother.
+- Fixed absent telemetry being treated as zero in several vehicle, battery,
+  tyre and trend availability checks.
+- Fixed front-motor chart bins using a single sample instead of the full bin,
+  improved long-history detail loading, and allowed a failed detail request to
+  be retried.
+- Added Phase 18 and Phase 20 checks to the default regression suite.
+
 ## 2.7.0-beta.3 — 2026-11-02
 
 - Reworked journey analysis into a responsive cockpit layout: on wide screens

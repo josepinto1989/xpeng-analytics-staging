@@ -533,6 +533,8 @@ export default function App() {
         setBusy(false);
         setProgress({ percent: 100, phase: "reset" });
       } else if (message.type === "error") {
+        if (message.requestId) detailRequestsRef.current.delete(message.requestId);
+        else detailRequestsRef.current.clear();
         driveRefreshQueueRef.current = null;
         exportPurposeRef.current = null;
         driveAfterPersistenceRef.current = false;
