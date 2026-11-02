@@ -28,6 +28,12 @@ import {
 } from "./persistent-history.js";
 
 const Dashboard = React.lazy(() => import("./Dashboard.jsx"));
+const BETA_CHANNEL = import.meta.env.VITE_RELEASE_CHANNEL === "beta";
+
+function BetaBanner({ t }) {
+  if (!BETA_CHANNEL) return null;
+  return <aside className="beta-channel-banner" role="status"><strong>{t("betaChannelTitle")}</strong><span>{t("betaChannelBody")}</span></aside>;
+}
 
 const phaseKeys = {
   runtime_load: "phaseRuntimeLoad",
@@ -1164,7 +1170,7 @@ export default function App() {
   </div> : null;
 
   if (snapshot) {
-    return <><React.Suspense fallback={<main className="app-shell"><div className="section-empty"><strong>{t("loadingEngine")}</strong></div></main>}><Dashboard
+    return <><BetaBanner t={t}/><React.Suspense fallback={<main className="app-shell"><div className="section-empty"><strong>{t("loadingEngine")}</strong></div></main>}><Dashboard
       data={snapshot}
       locale={locale}
       setLocale={setLocale}
@@ -1206,6 +1212,7 @@ export default function App() {
 
   return (
     <main className="app-shell">
+      <BetaBanner t={t}/>
       <header className="topbar">
         <a className="brand" href="./">
           <span className="brand-mark" aria-hidden="true"><img src={`${import.meta.env.BASE_URL}assets/xpeng-analytics-mark-minimal.png`} alt="" /></span>

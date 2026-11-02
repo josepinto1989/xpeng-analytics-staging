@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   build:
-    if: github.repository == 'josepinto1989/xpeng-analytics'
+    if: github.repository == 'josepinto1989/xpeng-analytics' || github.repository == 'josepinto1989/xpeng-analytics-staging'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -37,9 +37,12 @@ jobs:
         run: pnpm install --dir web --frozen-lockfile
       - name: Test browser runtime and translations
         run: pnpm --dir web test
+      - name: Test Phase 18 intelligence
+        run: pnpm --dir web test:phase18
       - name: Build static site
         env:
-          VITE_GOOGLE_CLIENT_ID: ${{ vars.GOOGLE_CLIENT_ID }}
+          VITE_GOOGLE_CLIENT_ID: ${{ vars.GOOGLE_CLIENT_ID || '611550016094-iop2o1ramh912lc4lqtu51vitakro0h4.apps.googleusercontent.com' }}
+          VITE_RELEASE_CHANNEL: ${{ github.repository == 'josepinto1989/xpeng-analytics-staging' && 'beta' || 'production' }}
         run: pnpm --dir web build
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5

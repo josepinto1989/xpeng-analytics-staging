@@ -1,8 +1,16 @@
+> [!CAUTION]
+> **PUBLIC BETA — NEW FEATURES UNDER TEST**
+>
+> This repository and its website are the development channel for XPENG
+> Analytics. Features can change, contain errors, or require a new import.
+> Keep your original XPENG ZIPs and a current `.xpeng` backup. For the stable
+> version, use [XPENG Analytics](https://josepinto1989.github.io/xpeng-analytics/).
+
 <p align="center">
   <img src="web/public/assets/xpeng-analytics-mark-minimal.png" width="88" alt="XPENG Analytics logo">
 </p>
 
-<h1 align="center">XPENG Analytics</h1>
+<h1 align="center">XPENG Analytics Beta</h1>
 
 <p align="center">
   Turn your XPENG Data Act export into useful, private vehicle insights.<br>
@@ -10,13 +18,15 @@
 </p>
 
 <p align="center">
-  <a href="https://josepinto1989.github.io/xpeng-analytics/"><img alt="Open XPENG Analytics" src="https://img.shields.io/badge/open_the_app-00a87e?style=for-the-badge"></a>
-  <a href="https://github.com/josepinto1989/xpeng-analytics/tags"><img alt="Latest version" src="https://img.shields.io/github/v/tag/josepinto1989/xpeng-analytics?sort=semver&style=for-the-badge&color=163a3a"></a>
+  <a href="https://josepinto1989.github.io/xpeng-analytics-staging/"><img alt="Open XPENG Analytics Beta" src="https://img.shields.io/badge/open_public_beta-e0a11b?style=for-the-badge"></a>
+  <img alt="Beta channel" src="https://img.shields.io/badge/channel-public_beta-e0a11b?style=for-the-badge">
   <a href="LICENSE"><img alt="MIT licence" src="https://img.shields.io/github/license/josepinto1989/xpeng-analytics?style=for-the-badge&color=667f7d"></a>
 </p>
 
 <p align="center">
-  <a href="https://josepinto1989.github.io/xpeng-analytics/"><strong>Try it in your browser</strong></a>
+  <a href="https://josepinto1989.github.io/xpeng-analytics-staging/"><strong>Open the public Beta</strong></a>
+  ·
+  <a href="docs/BETA_TESTING.md">Beta testing guide</a>
   ·
   <a href="docs/USER_GUIDE.md">User guide</a>
   ·

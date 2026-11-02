@@ -41,18 +41,42 @@ signals or location data.
 3. Allow selected monthly summaries and Lifetime Highlights in reports.
 4. Add a compact CSV summary for labelled journeys and categorized charges.
 
-### Next 3 — Advanced exports and encrypted history
+### Next 3 — Phase 18: practical intelligence
 
-1. Add local consolidated CSV export for recognised operation, energy, and
-   status streams using the production parser and deduplication rules.
-2. Include a manifest with coverage, checksums, conflicts, and skipped inputs.
-3. Stream large exports so multi-year histories remain practical.
-4. Research an optional password-encrypted `.xpeng` container using versioned,
-   authenticated Web Crypto primitives.
-5. Validate wrong passwords, corruption, recovery, large files, and browser
-   compatibility before offering encrypted Google Drive backups.
+**Status: implemented locally and awaiting owner validation on the public Beta
+channel. The production site remains on v2.4.0.**
 
-### Next 4 — GPS and map refinements
+1. Add a data-protection centre that combines telemetry freshness, XPENG's
+   rolling recovery window, portable-history state, Drive freshness, RAW-source
+   coverage, and known telemetry gaps.
+2. Add a Charging Lab for side-by-side AC or DC sessions, SOC-normalised power
+   curves, observed 10–80 and 20–80 times, taper estimation, peak power, and
+   temperature change.
+3. Add a parked-energy investigator for long stops, typical overnight loss,
+   start-time patterns, unusually high observations, and support-friendly
+   evidence without presenting a mechanical diagnosis.
+4. Add an A/B comparison workspace for two arbitrary periods, covering
+   distance, journeys, driving time, consumption, regeneration, charging,
+   efficiency, parked loss, and aligned daily charts.
+
+### Next 4 — Phase 19: smart ownership and costs
+
+1. Add optional origin, destination, purpose, and comments to journeys.
+2. Suggest repeated places and labels locally from GPS, odometer continuity,
+   distance, time, and previously confirmed journeys.
+3. Add time-of-use and location-specific tariffs, free sessions, and manual
+   public-charging costs.
+4. Add maintenance, tyre, inspection, insurance, and odometer reminders.
+
+### Next 5 — Phase 20: route and vehicle intelligence
+
+1. Colour matched GPS routes by speed, power, regeneration, or consumption.
+2. Use GPX elevation where available and synchronise route segments with the
+   existing chart cursor.
+3. Improve battery-estimate confidence, tyre trend observations, and optional
+   front/rear motor or AWD views only when those signals are genuinely present.
+
+### Completed — GPS and map refinements
 
 **Status: implemented, owner-validated, and released in v2.4.0.**
 
@@ -68,8 +92,11 @@ signals or location data.
    never bulk-download the standard OpenStreetMap tile service. **Research
    item retained for the native-app phase.**
 
-### Later — Multi-vehicle and native applications
+### Later — Installable, advanced, and native applications
 
+- Add an installable offline-capable PWA and synthetic demonstration history.
+- Retain consolidated CSV export and optional encrypted `.xpeng` as advanced
+  tools after the user-facing phases above.
 - Investigate isolated multi-vehicle histories only if owners request them.
 - Package the shared interface and engine for Windows, macOS, and Linux.
 - Keep native analysis local and usable offline, except for optional maps or
@@ -590,7 +617,7 @@ maintenance.
 - Preserve the limited `drive.file` permission and access only files created by
   XPENG Analytics. Do not add an application storage backend.
 
-### Phase 18 — Advanced data portability and encrypted history
+### Phase 22 — Advanced data portability and encrypted history
 
 Add optional power-user tools without complicating the normal ZIP-to-dashboard
 workflow. The existing standalone CSV consolidator is a design reference only;
@@ -622,7 +649,7 @@ its VDB format and version 3 `.xpeng` writer will not be integrated directly.
   histories, and cross-browser compatibility before exposing encryption as a
   stable feature.
 
-### Phase 19 — Native local and offline applications
+### Phase 23 — Native local and offline applications
 
 Package the existing interface as lightweight native desktop applications for
 Windows, macOS, and Linux while keeping the browser version available.
