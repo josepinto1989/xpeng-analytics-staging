@@ -4,6 +4,18 @@ All notable public changes are documented here.
 
 ## Unreleased
 
+## 2.7.0-beta.1 — 2026-11-02
+
+- Added journey-route colouring by speed, power, regeneration, or estimated
+  instant consumption, using only metrics genuinely available for the trip.
+- Added GPX elevation profiles synchronised with the existing journey-chart
+  cursor and map position.
+- Added optional front, rear, and observed AWD motor views; absent motor
+  signals remain hidden rather than being inferred.
+- Added a statistical capacity interval to battery-confidence results and
+  cautious tyre-pattern observations for pressure loss and imbalance.
+- Kept Phase 20 isolated to the public Beta channel.
+
 ## 2.6.0-beta.1 — 2026-11-02
 
 - Added optional journey origin, destination, purpose, and comments, including

@@ -20,7 +20,11 @@ export function assessBatteryHealth(history) {
   const capacities = rows.map((row) => Number(row.capacityKwh));
   const capacityMedianKwh = median(capacities);
   const absoluteDeviations = capacities.map((value) => Math.abs(value - capacityMedianKwh));
+  const madKwh = median(absoluteDeviations);
   const variabilityPct = capacityMedianKwh ? median(absoluteDeviations) / capacityMedianKwh * 100 : null;
+  const uncertaintyKwh = sampleCount > 1 && madKwh != null ? 1.96 * 1.4826 * madKwh / Math.sqrt(sampleCount) : null;
+  const lowerCapacityKwh = uncertaintyKwh == null || capacityMedianKwh == null ? null : Math.max(0,capacityMedianKwh-uncertaintyKwh);
+  const upperCapacityKwh = uncertaintyKwh == null || capacityMedianKwh == null ? null : capacityMedianKwh+uncertaintyKwh;
   const medianSocGainPct = median(rows.map((row) => row.socGainPct));
 
   const sampleScore = clamp(sampleCount / 8) * 45;
@@ -42,6 +46,8 @@ export function assessBatteryHealth(history) {
   else reasons.push("longWindow");
   if (variabilityPct != null && variabilityPct > 7) reasons.push("highVariability");
   else if (variabilityPct != null && variabilityPct <= 3) reasons.push("stableEstimates");
+  if (uncertaintyKwh != null && capacityMedianKwh && uncertaintyKwh / capacityMedianKwh > .06) reasons.push("wideInterval");
+  else if (uncertaintyKwh != null && sampleCount >= 5) reasons.push("narrowInterval");
 
-  return { level, score, sampleCount, spanDays, capacityMedianKwh, variabilityPct, medianSocGainPct, relativeChangePct, reasons };
+  return { level, score, sampleCount, spanDays, capacityMedianKwh, variabilityPct, medianSocGainPct, relativeChangePct, uncertaintyKwh, lowerCapacityKwh, upperCapacityKwh, reasons };
 }

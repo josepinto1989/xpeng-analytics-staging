@@ -32,11 +32,11 @@ function storedZip(files) {
 }
 
 function fixture(drivingSpeed = 50, rearRotorTemp = 42, start = 1_797_000_000) {
-  const operation = ["timer,vmodel,esp_vehspd,esp_vehlongaccel,esp_vehlateralaccel,cdcu_totalodometer,eps_steeringangle,ldcu_accpedalsig,ldcu_brkpedalst,ldcu_currentgearlev"], energy = ["timer,vmodel,bms_battvolt,bms_battcurr,ldcu_chrgpwr,ldcu_bms_soc_disp,bms_batttempmax_gb,bms_batttempmin_gb,ldcu_dstbatdisp_dynamic,ipur_actrotspd,ipur_acttorq,ipur_rotoracttemp"], status = ["timer,vmodel,ldcu_tpmsprfl,ldcu_tpmsprfr,ldcu_tpmsprrl,ldcu_tpmsprrr,ldcu_driverdoorajarst,rdcu_psngrdoorajarst,ldcu_rldoorajarst,rdcu_rrdoorajarst,ldcu_flwinposstfb,frwinposstfb,ldcu_rlwinposstfb,rrwinposstfb,rdm_tropenersts"];
+  const operation = ["timer,vmodel,esp_vehspd,esp_vehlongaccel,esp_vehlateralaccel,cdcu_totalodometer,eps_steeringangle,ldcu_accpedalsig,ldcu_brkpedalst,ldcu_currentgearlev"], energy = ["timer,vmodel,bms_battvolt,bms_battcurr,ldcu_chrgpwr,ldcu_bms_soc_disp,bms_batttempmax_gb,bms_batttempmin_gb,ldcu_dstbatdisp_dynamic,ipuf_actrotspd,ipuf_acttorq,ipuf_rotoracttemp,ipur_actrotspd,ipur_acttorq,ipur_rotoracttemp"], status = ["timer,vmodel,ldcu_tpmsprfl,ldcu_tpmsprfr,ldcu_tpmsprrl,ldcu_tpmsprrr,ldcu_driverdoorajarst,rdcu_psngrdoorajarst,ldcu_rldoorajarst,rdcu_rrdoorajarst,ldcu_flwinposstfb,frwinposstfb,ldcu_rlwinposstfb,rrwinposstfb,rdm_tropenersts"];
   for (let second = 0; second <= 360; second++) {
     const timer = start + second, driving = second >= 60 && second <= 240, charging = second >= 280;
     operation.push(`${timer},G6,${driving ? drivingSpeed : 0},${driving ? (second % 20 < 10 ? .18 : -.16) : 0},${driving ? .08 : 0},${10000 + second / 720},${driving ? (second % 30) - 15 : 0},${driving ? 28 : 0},${driving && second % 20 >= 10 ? 1 : 0},${driving ? 1 : 4}`);
-    energy.push(`${timer},G6,400,${charging ? -25 : driving ? 20 : 0},${charging ? 11 : 0},${60 + second / 120},${26 + second / 360},24,330,${driving ? 4200 : 0},${driving ? 80 : 0},${rearRotorTemp}`);
+    energy.push(`${timer},G6,400,${charging ? -25 : driving ? 20 : 0},${charging ? 11 : 0},${60 + second / 120},${26 + second / 360},24,330,${driving ? 3800 : 0},${driving ? 65 : 0},40,${driving ? 4200 : 0},${driving ? 80 : 0},${rearRotorTemp}`);
     const trunkState = second < 5 ? 1 : second < 7 ? 2 : second < 9 ? 5 : second < 11 ? 6 : second < 13 ? 9 : 1;
     status.push(`${timer},G6,250,251,249,250,${second < 2 ? 1 : 0},0,0,0,0,0,0,0,${trunkState}`);
   }
@@ -60,9 +60,11 @@ assert.ok(snapshot.battery.tyres.length >= 1, "expected tyre data");
 assert.ok(snapshot.trips[0].maxLateralG > 0, "expected maximum lateral acceleration");
 assert.ok(snapshot.trips[0].maxSteeringAngleDeg > 0, "expected maximum steering angle");
 assert.ok(snapshot.trips[0].maxRearTorqueNm > 0, "expected rear motor torque");
+assert.ok(snapshot.trips[0].maxFrontTorqueNm > 0, "expected front motor torque when present");
 assert.ok(snapshot.trips[0].maxRearRotorTempC > 0, "expected rear rotor temperature");
 assert.ok(snapshot.trips[0].series.some((row) => row.longitudinalG != null && row.lateralG != null), "expected journey force series");
 assert.ok(snapshot.trips[0].series.some((row) => row.rearMotorTorqueNm != null && row.rearMotorRpm != null), "expected rear motor series");
+assert.ok(snapshot.trips[0].series.some((row) => row.frontMotorTorqueNm != null && row.frontMotorRpm != null), "expected front motor series when present");
 assert.ok(snapshot.trips[0].series.some((row) => row.tyreFrontLeftKpa != null && row.tyreRearRightKpa != null), "expected journey tyre series");
 assert.ok(snapshot.trips[0].replayEvents.some((row) => row.driverDoorOpen === 1), "expected observed pre-trip driver-door state in replay telemetry");
 assert.ok(snapshot.trips[0].replayEvents.some((row) => row.trunkState === 5), "expected observed pre-trip fully-open boot state in replay telemetry");

@@ -290,11 +290,11 @@ function routePreview(track) {
     const sourceIndex = Math.min(index, track.time.length - 1);
     const gap = previousIndex != null && (track.time[sourceIndex] - track.time[previousIndex] > MAP_GAP_SECONDS || track.segment[sourceIndex] !== track.segment[previousIndex]);
     if (gap && current.length) { segments.push(current); current = []; }
-    current.push({ lat: rounded(track.lat[sourceIndex], 6), lon: rounded(track.lon[sourceIndex], 6), timestampUtc: iso(track.time[sourceIndex]) });
+    current.push({ lat: rounded(track.lat[sourceIndex], 6), lon: rounded(track.lon[sourceIndex], 6), timestampUtc: iso(track.time[sourceIndex]), elevationM: rounded(track.elevation[sourceIndex], 1), gpsSpeedKmh: rounded(track.speedMps[sourceIndex] * 3.6, 1) });
     previousIndex = sourceIndex;
   }
   const lastIndex = track.time.length - 1;
-  if (previousIndex !== lastIndex) current.push({ lat: rounded(track.lat[lastIndex], 6), lon: rounded(track.lon[lastIndex], 6), timestampUtc: iso(track.time[lastIndex]) });
+  if (previousIndex !== lastIndex) current.push({ lat: rounded(track.lat[lastIndex], 6), lon: rounded(track.lon[lastIndex], 6), timestampUtc: iso(track.time[lastIndex]), elevationM: rounded(track.elevation[lastIndex], 1), gpsSpeedKmh: rounded(track.speedMps[lastIndex] * 3.6, 1) });
   if (current.length) segments.push(current);
   return segments.filter((segment) => segment.length >= 2);
 }

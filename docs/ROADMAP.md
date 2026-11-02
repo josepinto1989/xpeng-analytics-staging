@@ -73,6 +73,9 @@ The production site remains unchanged.**
 
 ### Next 5 — Phase 20: route and vehicle intelligence
 
+**Status: implemented and published for validation on the public Beta channel.
+The production site remains unchanged.**
+
 1. Colour matched GPS routes by speed, power, regeneration, or consumption.
 2. Use GPX elevation where available and synchronise route segments with the
    existing chart cursor.

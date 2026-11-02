@@ -4,6 +4,7 @@ import { assessBatteryHealth } from "../src/battery-health.js";
 assert.deepEqual(assessBatteryHealth([]), {
   level: "insufficient", score: 0, sampleCount: 0, spanDays: 0, capacityMedianKwh: null,
   variabilityPct: null, medianSocGainPct: null, relativeChangePct: null,
+  uncertaintyKwh: null, lowerCapacityKwh: null, upperCapacityKwh: null,
   reasons: ["fewSamples", "shortWindow"],
 });
 
@@ -26,5 +27,7 @@ assert.equal(strong.sampleCount, 10);
 assert.ok(strong.score >= 75);
 assert.ok(strong.variabilityPct < 1);
 assert.ok(strong.relativeChangePct < 0);
+assert.ok(strong.lowerCapacityKwh < strong.upperCapacityKwh);
+assert.ok(strong.uncertaintyKwh < 1);
 
 console.log("Battery health confidence passed.");
