@@ -741,7 +741,7 @@ body { color: var(--ink); background: var(--panel-soft); transition: background 
 .data-gap-disclaimer,.data-gap-notice { padding: 12px 14px; display: grid; gap: 4px; border: 1px solid rgba(227,166,47,.32); border-left: 3px solid var(--amber); border-radius: 9px; background: rgba(227,166,47,.07); }
 .data-gap-disclaimer strong,.data-gap-notice strong { font-size: 10px; }.data-gap-disclaimer p,.data-gap-notice p { margin: 0; color: var(--muted); font-size: 9px; line-height: 1.55; }
 .record-list .record-button { content-visibility: auto; contain-intrinsic-size: 68px; }
-.journey-detail-shell { min-width: 0; transition: opacity .16s ease; }
+.journey-detail-shell { min-width: 0; container: journey-detail / inline-size; transition: opacity .16s ease; }
 .journey-detail-shell.is-updating { opacity: .68; }
 .journey-list-toolbar > div { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
 .journey-list-toolbar.is-selecting { align-items: stretch; }
@@ -788,6 +788,17 @@ body { color: var(--ink); background: var(--panel-soft); transition: background 
 .journey-detail-stack .technical-grid .dash-panel > header { min-height: 52px; padding: 11px 16px; }
 .journey-detail-stack .technical-grid .chart-wrap { height: 185px !important; padding: 7px 12px 5px 6px; }
 .journey-detail-stack .technical-grid .progressive-chart-placeholder { min-height: 237px; }
+.journey-analysis-cockpit { display: grid; gap: 14px; align-items: start; }
+.journey-analysis-charts { min-width: 0; }
+@container journey-detail (min-width: 820px) {
+  .journey-analysis-cockpit.has-route { grid-template-columns: minmax(360px, .95fr) minmax(360px, 1.05fr); }
+  .journey-route-column { position: sticky; top: 18px; z-index: 3; min-width: 0; }
+  .journey-analysis-cockpit.has-route .journey-analysis-charts .technical-grid { grid-template-columns: minmax(0, 1fr); }
+  .journey-analysis-cockpit.has-route .journey-analysis-charts .progressive-chart-placeholder { min-height: 237px; }
+  .journey-analysis-cockpit.has-route .route-map { height: 285px; }
+  .journey-analysis-cockpit.has-route .route-elevation .chart-wrap { height: 120px !important; }
+  .journey-analysis-cockpit.has-route .route-map-meta { max-height: 40px; overflow: auto; }
+}
 @media (max-width: 700px) {
   .journey-list-toolbar, .journey-list-toolbar > div, .journey-group-builder { align-items: stretch; flex-direction: column; }
   .journey-list-toolbar > input, .journey-group-builder > input { width: 100%; flex-basis: auto; }

@@ -4,6 +4,14 @@ All notable public changes are documented here.
 
 ## Unreleased
 
+## 2.7.0-beta.3 — 2026-11-02
+
+- Reworked journey analysis into a responsive cockpit layout: on wide screens
+  the GPS route and elevation remain visible while telemetry charts scroll in
+  the adjacent column.
+- Kept the existing vertical layout on narrower screens and reduced the map
+  footprint inside the cockpit without hiding route controls or synchronisation.
+
 ## 2.7.0-beta.2 — 2026-11-02
 
 - Fixed route colouring when GPX speed is absent or the GPX and XPENG clocks
