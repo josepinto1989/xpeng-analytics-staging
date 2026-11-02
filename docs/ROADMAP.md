@@ -61,6 +61,9 @@ channel. The production site remains on v2.4.0.**
 
 ### Next 4 — Phase 19: smart ownership and costs
 
+**Status: implemented and published for validation on the public Beta channel.
+The production site remains unchanged.**
+
 1. Add optional origin, destination, purpose, and comments to journeys.
 2. Suggest repeated places and labels locally from GPS, odometer continuity,
    distance, time, and previously confirmed journeys.

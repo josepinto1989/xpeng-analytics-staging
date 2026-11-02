@@ -4,6 +4,20 @@ All notable public changes are documented here.
 
 ## Unreleased
 
+## 2.6.0-beta.1 — 2026-11-02
+
+- Added optional journey origin, destination, purpose, and comments, including
+  local suggestions based on previously confirmed journeys and GPS or trip
+  patterns.
+- Added flat, time-of-use, and location-specific electricity tariffs, plus
+  free charging and manual session costs.
+- Added the My XPENG workspace with cost summaries and maintenance, tyre,
+  inspection, insurance, and odometer reminders.
+- Included the new ownership fields and cost sources in CSV exports and global
+  search while preserving compatibility with existing `.xpeng` histories.
+- Published this phase only to the public Beta channel; production remains
+  unchanged.
+
 ## 2.5.1-beta.1 — 2026-11-02
 
 - Reworked the Parked Energy investigator into a compact four-card summary.
