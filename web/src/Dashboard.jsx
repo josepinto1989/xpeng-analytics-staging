@@ -28,6 +28,7 @@ import { buildParkingInvestigation } from "./parking-investigator.js";
 import { comparePeriods, comparisonDefaults } from "./period-comparison.js";
 import { assessDataProtection } from "./data-protection.js";
 import { buildTyreObservations } from "./tyre-observations.js";
+import { aggregateBands } from "./distribution-bands.js";
 
 const Replay = React.lazy(() => import("./Replay.jsx"));
 const MyCharts = React.lazy(() => import("./MyCharts.jsx"));
@@ -489,8 +490,7 @@ function Driving({ data, locale, t, period, maxDate, customRange }) {
   const model = useMemo(() => {
     const filter = (row) => inPeriod(row.date,period,maxDate,customRange);
     const trips=safe(data.trips).filter(filter), speed=safe(data.driving?.speed).filter(filter), pedal=safe(data.driving?.pedal).filter(filter), gg=safe(data.driving?.gg).filter(filter), events=safe(data.driving?.events).filter(filter);
-    const aggregate=(rows)=>[...rows.reduce((map,row)=>map.set(row.band,(map.get(row.band)||0)+Number(row.seconds||0)),new Map())].map(([band,seconds])=>({band,minutes:seconds/60}));
-    const speedRows=aggregate(speed), pedalRows=aggregate(pedal), drivingMinutes=speedRows.reduce((total,row)=>total+row.minutes,0), regenerated=sum(trips,"regeneratedKwh"), used=sum(trips,"energyUsedKwh"), fast=speedRows.filter((row)=>row.band.startsWith("120")||row.band.startsWith("150")).reduce((total,row)=>total+row.minutes,0);
+    const speedRows=aggregateBands(speed), pedalRows=aggregateBands(pedal), drivingMinutes=speedRows.reduce((total,row)=>total+row.minutes,0), regenerated=sum(trips,"regeneratedKwh"), used=sum(trips,"energyUsedKwh"), fast=speedRows.filter((row)=>row.band.startsWith("120")||row.band.startsWith("150")).reduce((total,row)=>total+row.minutes,0);
     const pedalMinutes=pedalRows.reduce((total,row)=>total+row.minutes,0), highPedal=pedalRows.filter((row)=>row.band.startsWith("50")||row.band.startsWith("75")).reduce((total,row)=>total+row.minutes,0);
     const forceSamples=safe(data.telemetry).filter((row)=>inPeriod(row.timestampUtc,period,maxDate,customRange)&&Number(row.speedKmh)>=1&&finiteValue(row.longitudinalG)&&finiteValue(row.lateralG));
     const dynamicSamples=forceSamples.filter((row)=>Math.max(Math.abs(Number(row.longitudinalG)),Math.abs(Number(row.lateralG)))>=.18).length;
