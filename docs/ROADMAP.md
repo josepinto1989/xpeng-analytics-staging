@@ -1,6 +1,6 @@
 # Roadmap
 
-## Status after v2.7.5 Beta validation
+## Status after the v2.7.5 audit
 
 The production browser application has publicly released the core work from
 phases 1–17. The public Beta now also includes phases 18–20 and the phase 21
@@ -9,25 +9,26 @@ vehicle intelligence, the 2.7.5 visual refinement, compact navigation,
 collapsible dashboard sections, and bounded scrolling for long technical
 content.
 
-Version 2.7.5 was owner-validated on 3 November 2026 and is ready for final
-release preparation. The production site remains unchanged until the reviewed
-Beta commit is deliberately promoted.
+Version 2.7.5 was owner-validated on 3 November 2026. The final audit found a
+time-zone issue in time-of-use charging costs, incomplete Drive privacy copy,
+and a release-tag mismatch. Those corrections are now prepared as
+`2.7.6-beta.1` for one final owner smoke test. Production remains unchanged.
 
 Phases 7 and 10 remain open only for compatibility, performance, and map-format
 improvements. They are not blockers for the current public product.
 
 ## Next implementation order
 
-### Next 1 — Promote v2.7.5 to production
+### Next 1 — Validate v2.7.6-beta.1 and promote the final build
 
-**Status: owner-validated on the public Beta; ready for release preparation.**
+**Status: audit corrections implemented; awaiting owner validation on Beta.**
 
 1. Run the final automated tests, production build, repository audit, and
    desktop/mobile smoke tests from the exact release commit.
 2. Update the English README, user guides, changelog, release notes, and
    publication checklist so they describe phases 18–21 consistently.
-3. Align the application version, Git tag, and GitHub release with the reviewed
-   commit. Do not reuse a tag that points to an earlier Beta commit.
+3. After validation, promote the reviewed scope as `v2.7.6`; do not reuse the
+   existing `v2.7.5` tag that points to an earlier Beta commit.
 4. Promote the reviewed commit to the production repository and verify the
    deployed application before announcing it.
 5. Prepare the public release post only after the production smoke test passes.

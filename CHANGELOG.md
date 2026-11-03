@@ -4,6 +4,19 @@ All notable public changes are documented here.
 
 ## Unreleased
 
+## 2.7.6-beta.1 — 2026-11-03
+
+- Fixed time-of-use charging costs to use the same browser-local session hour
+  displayed by the application, including local daylight-saving rules.
+- Expanded the privacy policy to cover optional original XPENG ZIP and GPX
+  archiving, Drive retention, deduplication, and deletion controls.
+- Improved accessible labels, panel heading order, footer touch targets, and the
+  dashboard brand's accessible name.
+- Collapsed optional journey notes initially so journey metrics and charts appear
+  earlier, and removed the unused fifth cell from Charging habits.
+- Clarified that the battery-capacity interval is an approximate observed range.
+- Prepared a new release identity rather than reusing the earlier `v2.7.5` tag.
+
 ## 2.7.5 — 2026-11-02
 
 - Added collapsible secondary dashboard sections and bounded scrolling for long

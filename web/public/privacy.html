@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light dark" />
     <meta name="description" content="How XPENG Analytics processes, stores and protects vehicle data." />
-    <link rel="icon" type="image/png" href="./assets/xpeng-analytics-mark-minimal.png" />
+    <link rel="icon" type="image/png" href="./assets/xpeng-analytics-mark-96.png" />
     <title>Privacy Policy · XPENG Analytics</title>
     <style>
       :root { color-scheme: light; --bg:#f4f8f7; --panel:#fff; --ink:#102f32; --muted:#5d7475; --line:#d7e3df; --accent:#079b77; }
@@ -33,11 +33,11 @@
     <main>
       <header>
         <a class="brand" href="./">
-          <img src="./assets/xpeng-analytics-mark-minimal.png" alt="" />
+          <img src="./assets/xpeng-analytics-mark-96.png" alt="" />
           <span><strong>XPENG</strong><small>Analytics</small></span>
         </a>
         <h1>Privacy Policy</h1>
-        <p class="updated">Last updated: 18 October 2026</p>
+        <p class="updated">Last updated: 3 November 2026</p>
         <p class="summary"><strong>Your vehicle data belongs to you.</strong> XPENG Analytics processes it in your browser and does not operate an application server that receives your vehicle history.</p>
       </header>
 
@@ -49,13 +49,15 @@
 
       <section>
         <h2>Optional Google Drive backup</h2>
-        <p>Google Drive is optional. When you explicitly connect your account and save a backup, the browser uploads one <code>.xpeng</code> history directly to a visible <strong>XPENG Analytics</strong> folder in your own Google Drive.</p>
+        <p>Google Drive is optional. When you explicitly connect your account and save a backup, the browser uploads one current <code>.xpeng</code> history directly to a visible <strong>XPENG Analytics</strong> folder in your own Google Drive.</p>
+        <p>If you separately enable original-file archiving, the app can also create a <strong>Raw Files</strong> folder for original XPENG ZIP exports and an <strong>Original GPX files</strong> folder for imported routes. These options are off until you enable them.</p>
         <ul>
           <li><strong>Access:</strong> the app requests only the <code>drive.file</code> permission, limited to files it creates or that you explicitly open with it.</li>
-          <li><strong>Use:</strong> Drive access is used only to create, update and restore your XPENG Analytics backup.</li>
+          <li><strong>Use:</strong> Drive access is used only to create, update and restore your XPENG Analytics backup and, when enabled, to archive or remove the original XPENG and GPX files managed by the app.</li>
           <li><strong>Storage:</strong> Google access tokens remain in the current tab's memory. XPENG Analytics does not store your token, password or Google email address on an application server or inside the <code>.xpeng</code> file.</li>
           <li><strong>Sharing:</strong> XPENG Analytics does not sell, share or transfer Google user data to third parties. Google stores the backup in your account under Google's own terms.</li>
-          <li><strong>Control:</strong> disconnecting revokes the current token when possible. It does not delete your backup; you can permanently delete the file or folder directly in Google Drive.</li>
+          <li><strong>Retention:</strong> the app keeps one current processed history. For original XPENG exports it removes an older app-managed ZIP only when a newer retained ZIP covers the same telemetry with the configured one-day overlap. Unknown or incomplete coverage is retained conservatively. Original GPX files are deduplicated by content.</li>
+          <li><strong>Control:</strong> disconnecting revokes the current token when possible. It does not delete your backup or archived originals; you can download or delete app-managed originals from the Data section, or permanently delete any file or folder directly in Google Drive.</li>
         </ul>
       </section>
 

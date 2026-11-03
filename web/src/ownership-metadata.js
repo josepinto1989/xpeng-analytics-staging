@@ -67,7 +67,7 @@ export function chargeEstimatedCost(charge, tariff, metadata = {}) {
   if (!Number.isFinite(energy) || !tariff) return null;
   let price = Number(tariff.pricePerKwh);
   if (tariff.model === "time") {
-    const match = String(charge?.startedAtUtc || "").match(/T(\d{2}):/), hour = match ? Number(match[1]) : NaN, start = Number(tariff.peakStartHour), end = Number(tariff.peakEndHour);
+    const startedAt = new Date(charge?.startedAtUtc || ""), hour = Number.isFinite(startedAt.getTime()) ? startedAt.getHours() : NaN, start = Number(tariff.peakStartHour), end = Number(tariff.peakEndHour);
     const peak = Number.isFinite(hour) && (start === end || (start < end ? hour >= start && hour < end : hour >= start || hour < end));
     price = peak ? Number(tariff.pricePerKwh) : Number(tariff.offPeakPricePerKwh);
   }

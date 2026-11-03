@@ -1218,7 +1218,7 @@ export default function App() {
       <BetaBanner t={t}/>
       <header className="topbar">
         <a className="brand" href="./">
-          <span className="brand-mark" aria-hidden="true"><img src={`${import.meta.env.BASE_URL}assets/xpeng-analytics-mark-minimal.png`} alt="" /></span>
+          <span className="brand-mark" aria-hidden="true"><img src={`${import.meta.env.BASE_URL}assets/xpeng-analytics-mark-96.png`} alt="" /></span>
           <span><strong>XPENG</strong><small>Analytics</small></span>
         </a>
         <div className="topbar-actions">
@@ -1226,7 +1226,7 @@ export default function App() {
           <button className="theme-toggle" type="button" onClick={() => setTheme((current) => current === "light" ? "dark" : "light")} aria-label={theme === "light" ? t("darkTheme") : t("lightTheme")}><span aria-hidden="true" />{theme === "light" ? t("dark") : t("light")}</button>
           <label className="language-picker" htmlFor="landing-language">
             <span>{t("language")}</span>
-            <select id="landing-language" name="language" value={locale} onChange={(event) => setLocale(event.target.value)}>
+            <select id="landing-language" name="language" aria-label={t("language")} value={locale} onChange={(event) => setLocale(event.target.value)}>
               <option value="pt-PT">Português</option>
               <option value="en">English</option>
             </select>

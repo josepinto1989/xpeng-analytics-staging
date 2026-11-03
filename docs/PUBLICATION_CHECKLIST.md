@@ -1,5 +1,19 @@
 # Publication checklist
 
+## v2.7.6-beta.1 — 2026-11-03
+
+- [x] Time-of-use tariffs use the same browser-local hour shown in the interface.
+- [x] Privacy disclosures cover processed history, optional RAW XPENG ZIPs,
+  original GPX files, retention, deduplication, and user deletion controls.
+- [x] Landing and dashboard accessibility findings from the 2.7.5 audit were
+  corrected and rechecked.
+- [x] Optional journey notes are initially collapsed and Charging habits uses a
+  complete four-column layout.
+- [x] The Beta has a new version identity and does not reuse the existing
+  `v2.7.5` tag.
+- [ ] Owner smoke test on the public Beta.
+- [ ] Final production version, tag, GitHub release, and deployment verification.
+
 ## v2.4.0 — 2026-10-27
 
 - [x] Journey/charging classifications and tariffs survive `.xpeng`, browser,
