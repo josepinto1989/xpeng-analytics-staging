@@ -1,20 +1,38 @@
 # Roadmap
 
-## Status after v2.4.0
+## Status after v2.7.5 Beta validation
 
-The browser application has completed and publicly released the core work from
-phases 1–17: local import, portable and remembered history, detailed analytics,
-long-term trends, GPS maps, My Charts, journey replay, consolidated navigation,
-guided onboarding, Google Drive backup and source archiving, Insights,
-long-history sharding, manual journey grouping, data-gap warnings, and Lifetime
-Highlights.
+The production browser application has publicly released the core work from
+phases 1–17. The public Beta now also includes phases 18–20 and the phase 21
+usability consolidation: practical intelligence, ownership tools, route and
+vehicle intelligence, the 2.7.5 visual refinement, compact navigation,
+collapsible dashboard sections, and bounded scrolling for long technical
+content.
+
+Version 2.7.5 was owner-validated on 3 November 2026 and is ready for final
+release preparation. The production site remains unchanged until the reviewed
+Beta commit is deliberately promoted.
 
 Phases 7 and 10 remain open only for compatibility, performance, and map-format
 improvements. They are not blockers for the current public product.
 
 ## Next implementation order
 
-### Next 1 — Ownership, expenses, and useful labels
+### Next 1 — Promote v2.7.5 to production
+
+**Status: owner-validated on the public Beta; ready for release preparation.**
+
+1. Run the final automated tests, production build, repository audit, and
+   desktop/mobile smoke tests from the exact release commit.
+2. Update the English README, user guides, changelog, release notes, and
+   publication checklist so they describe phases 18–21 consistently.
+3. Align the application version, Git tag, and GitHub release with the reviewed
+   commit. Do not reuse a tag that points to an earlier Beta commit.
+4. Promote the reviewed commit to the production repository and verify the
+   deployed application before announcing it.
+5. Prepare the public release post only after the production smoke test passes.
+
+### Completed — Ownership, expenses, and useful labels
 
 **Status: implemented, owner-validated, and released in v2.4.0.**
 
@@ -32,7 +50,7 @@ signals or location data.
    history, and Google Drive restore.
 7. Add business/personal distance and estimated-cost summaries to PDF and CSV.
 
-### Next 2 — Report and My Charts integration
+### Completed — Report and My Charts integration
 
 **Status: implemented, owner-validated, and released in v2.4.0.**
 
@@ -41,10 +59,9 @@ signals or location data.
 3. Allow selected monthly summaries and Lifetime Highlights in reports.
 4. Add a compact CSV summary for labelled journeys and categorized charges.
 
-### Next 3 — Phase 18: practical intelligence
+### Completed — Phase 18: practical intelligence
 
-**Status: implemented locally and awaiting owner validation on the public Beta
-channel. The production site remains on v2.4.0.**
+**Status: implemented and owner-validated in v2.7.5 on the public Beta.**
 
 1. Add a data-protection centre that combines telemetry freshness, XPENG's
    rolling recovery window, portable-history state, Drive freshness, RAW-source
@@ -59,10 +76,9 @@ channel. The production site remains on v2.4.0.**
    distance, journeys, driving time, consumption, regeneration, charging,
    efficiency, parked loss, and aligned daily charts.
 
-### Next 4 — Phase 19: smart ownership and costs
+### Completed — Phase 19: smart ownership and costs
 
-**Status: implemented and published for validation on the public Beta channel.
-The production site remains unchanged.**
+**Status: implemented and owner-validated in v2.7.5 on the public Beta.**
 
 1. Add optional origin, destination, purpose, and comments to journeys.
 2. Suggest repeated places and labels locally from GPS, odometer continuity,
@@ -71,16 +87,56 @@ The production site remains unchanged.**
    public-charging costs.
 4. Add maintenance, tyre, inspection, insurance, and odometer reminders.
 
-### Next 5 — Phase 20: route and vehicle intelligence
+### Completed — Phase 20: route and vehicle intelligence
 
-**Status: implemented and published for validation on the public Beta channel.
-The production site remains unchanged.**
+**Status: implemented and owner-validated in v2.7.5 on the public Beta.**
 
 1. Colour matched GPS routes by speed, power, regeneration, or consumption.
 2. Use GPX elevation where available and synchronise route segments with the
    existing chart cursor.
 3. Improve battery-estimate confidence, tyre trend observations, and optional
    front/rear motor or AWD views only when those signals are genuinely present.
+
+### Completed — Phase 21: usability and release consolidation
+
+**Status: implemented and owner-validated in v2.7.5 on the public Beta.**
+
+1. Simplify the navigation around common owner tasks while retaining advanced
+   tools in expandable groups.
+2. Refine spacing, typography, card hierarchy, responsive controls, and the
+   landing-page import flow without replacing the established identity.
+3. Keep essential dashboard metrics visible while making secondary technical
+   sections collapsible and long tables independently scrollable.
+4. Keep the journey map visible beside a bounded telemetry-chart column on
+   larger screens, while preserving a clear vertical mobile layout.
+5. Complete the code, performance, accessibility, and cross-browser regression
+   review required for the combined release.
+
+### Next 2 — Phase 22: advanced data portability
+
+1. Add local, worker-based export of consolidated operation, energy, and status
+   CSVs with a manifest and checksums.
+2. Preserve recognised extra columns where safe and report conflicts or skipped
+   inputs clearly.
+3. Prototype an optional password-encrypted `.xpeng` container without changing
+   existing histories or the normal Google Drive workflow.
+4. Validate large-history memory use, corruption detection, wrong passwords,
+   and cross-browser round trips before presenting encryption as stable.
+
+### Next 3 — Phase 23: native local and offline applications
+
+1. Select the packaging approach shared by Windows, macOS, and Linux.
+2. Reuse the current interface, analytics engine, reports, and `.xpeng` format.
+3. Reopen the selected local history automatically and keep vehicle analysis
+   usable without an application backend or internet connection.
+4. Define signing, updates, permissions, and reproducible release artefacts for
+   each platform before publishing installers.
+
+### Later — optional product extensions
+
+- Add an installable offline-capable PWA and a synthetic demonstration history.
+- Investigate isolated multi-vehicle histories only if owners request them.
+- Continue research into legally compatible offline maps for native packages.
 
 ### Completed — GPS and map refinements
 
@@ -97,18 +153,6 @@ The production site remains unchanged.**
 4. Research a legally compatible offline basemap for a future desktop app;
    never bulk-download the standard OpenStreetMap tile service. **Research
    item retained for the native-app phase.**
-
-### Later — Installable, advanced, and native applications
-
-- Add an installable offline-capable PWA and synthetic demonstration history.
-- Retain consolidated CSV export and optional encrypted `.xpeng` as advanced
-  tools after the user-facing phases above.
-- Investigate isolated multi-vehicle histories only if owners request them.
-- Package the shared interface and engine for Windows, macOS, and Linux.
-- Keep native analysis local and usable offline, except for optional maps or
-  Google Drive.
-- Follow platform signing and permission requirements and publish reproducible,
-  signed artefacts.
 
 ## Continuous work
 
