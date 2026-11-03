@@ -33,7 +33,7 @@ const ISSUE_URL = BETA_CHANNEL ? "https://github.com/josepinto1989/xpeng-analyti
 
 function BetaBanner({ t }) {
   if (!BETA_CHANNEL) return null;
-  return <aside className="beta-channel-banner" role="status"><strong>{t("betaChannelTitle")}</strong><span>{t("betaChannelBody")}</span></aside>;
+  return <aside className="beta-channel-banner"><strong>{t("betaChannelTitle")}</strong><span>{t("betaChannelBody")}</span></aside>;
 }
 
 const phaseKeys = {
