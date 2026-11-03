@@ -6,6 +6,10 @@ All notable public changes are documented here.
 
 ## 2.7.5 — 2026-11-02
 
+- Added collapsible secondary dashboard sections and bounded scrolling for long
+  technical tables, keeping the main metrics and charts immediately visible.
+- Kept the journey map in view on larger screens while telemetry charts scroll
+  independently beside it.
 - Simplified the sidebar around six everyday tasks and moved specialist tools
   into compact, expandable groups.
 - Improved spacing, typography, button sizes, focus states, card hierarchy and
