@@ -2,14 +2,6 @@
 
 All notable public changes are documented here.
 
-## Unreleased
-
-- Added optional, consent-based Cloudflare Web Analytics for aggregate visit
-  and page-performance statistics, without attaching vehicle or user-entered
-  data to the beacon.
-- Added public build configuration, privacy disclosures, and automated tests
-  for the analytics consent boundary.
-
 ## 2.8.0 — 2026-11-04
 
 - Added a data-protection centre, Charging Lab, parked-energy investigator,

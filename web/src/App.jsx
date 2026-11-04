@@ -8,7 +8,6 @@ import { createGoogleDriveClient, googleDriveConfiguration, readGoogleDriveSetti
 import { buildDriveBackupMetadata } from "./drive-backup-metadata.js";
 import { rawSourcesCoverBackup } from "./drive-history-refresh.js";
 import { mergeRawArchiveRegistry } from "./raw-archive-registry.js";
-import { cloudflareAnalyticsConfiguration, loadCloudflareAnalytics, readAnalyticsConsent, writeAnalyticsConsent } from "./privacy-analytics.js";
 import { CURRENT_HISTORY_VERSION, SUPPORTED_HISTORY_VERSIONS } from "./history-version.js";
 import { forgetUploadedSessionArchives, rememberSessionArchive, sessionArchivesToUpload } from "./session-archive-cache.js";
 import {
@@ -35,25 +34,6 @@ const ISSUE_URL = BETA_CHANNEL ? "https://github.com/josepinto1989/xpeng-analyti
 function BetaBanner({ t }) {
   if (!BETA_CHANNEL) return null;
   return <aside className="beta-channel-banner"><strong>{t("betaChannelTitle")}</strong><span>{t("betaChannelBody")}</span></aside>;
-}
-
-function AnalyticsConsent({ t }) {
-  const [choice, setChoice] = useState(() => readAnalyticsConsent());
-  const config = useMemo(() => cloudflareAnalyticsConfiguration(), []);
-
-  useEffect(() => {
-    if (choice === "allow" && config.configured) loadCloudflareAnalytics(config.token);
-  }, [choice, config]);
-
-  if (!config.configured || choice) return null;
-  const decide = (value) => {
-    writeAnalyticsConsent(value);
-    setChoice(value);
-  };
-  return <aside className="analytics-consent" role="dialog" aria-labelledby="analytics-consent-title">
-    <div><strong id="analytics-consent-title">{t("analyticsConsentTitle")}</strong><p>{t("analyticsConsentBody")}</p><a href={`${import.meta.env.BASE_URL}privacy.html`} target="_blank" rel="noreferrer">{t("analyticsConsentLearnMore")}</a></div>
-    <div><button type="button" className="analytics-decline" onClick={() => decide("decline")}>{t("analyticsConsentDecline")}</button><button type="button" className="analytics-allow" onClick={() => decide("allow")}>{t("analyticsConsentAllow")}</button></div>
-  </aside>;
 }
 
 const phaseKeys = {
@@ -1217,7 +1197,7 @@ export default function App() {
   </div> : null;
 
   if (snapshot) {
-    return <><BetaBanner t={t}/><AnalyticsConsent t={t}/><React.Suspense fallback={<main className="app-shell"><div className="section-empty"><strong>{t("loadingEngine")}</strong></div></main>}><Dashboard
+    return <><BetaBanner t={t}/><React.Suspense fallback={<main className="app-shell"><div className="section-empty"><strong>{t("loadingEngine")}</strong></div></main>}><Dashboard
       data={snapshot}
       locale={locale}
       setLocale={setLocale}
@@ -1382,7 +1362,6 @@ export default function App() {
       <footer className="site-footer"><span>{t("unofficial")}</span><span>{t("ownerLabel")}: Miguel Pinto</span><span>v{APP_VERSION}</span><a href={`${import.meta.env.BASE_URL}about.html`} target="_blank" rel="noreferrer">{t("aboutProject")}</a><a href={`${import.meta.env.BASE_URL}privacy.html`} target="_blank" rel="noreferrer">{t("privacyPolicy")}</a><a href={ISSUE_URL} target="_blank" rel="noreferrer">{t("reportIssue")}</a><a href="https://ko-fi.com/mpinto" target="_blank" rel="noreferrer">Ko-fi</a></footer>
       {tutorialMode ? <TutorialOverlay steps={tutorialSteps} onComplete={finishTutorial} onSkip={skipTutorial} t={t} /> : null}
       {driveRefreshDialog}
-      <AnalyticsConsent t={t}/>
     </main>
   );
 }

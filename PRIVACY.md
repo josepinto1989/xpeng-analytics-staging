@@ -60,15 +60,6 @@ and therefore may receive standard connection metadata such as an IP address
 and user agent. No vehicle export or processed vehicle history is intentionally
 included in those requests.
 
-Optional aggregate usage analytics are disabled until the visitor explicitly
-allows them. If allowed, the application loads Cloudflare Web Analytics to
-count visits and measure page performance. The beacon does not receive XPENG
-exports, `.xpeng` histories, GPX coordinates, vehicle metrics, chart values,
-Google account details, or user-entered ownership information. The consent
-choice is stored in local browser storage. Cloudflare receives the ordinary
-connection request needed to provide the analytics service and states that Web
-Analytics does not collect or use visitors' personal data.
-
 ## Sensitive information
 
 Vehicle exports and portable histories may reveal travel times, driving
@@ -92,11 +83,9 @@ access control. Manual journey groups add only a user-provided group name and
 references to existing journey and trip identifiers; they do not duplicate
 telemetry or create new location samples.
 
-The application must never add vehicle telemetry, advertising, remote fonts,
-crash uploads, or additional analytics without a separate public design review
-and an explicit user-facing consent decision. The optional Cloudflare Web
-Analytics beacon described above is limited to aggregate visit and performance
-statistics. Google Identity Services and Google Drive are
+The application must never add telemetry, advertising, remote fonts, crash
+uploads, or analytics without a separate public design review and an explicit
+user-facing consent decision. Google Identity Services and Google Drive are
 contacted only for the optional backup feature. When the user opens a journey with an associated
 GPS route, the tile provider receives the ordinary web requests needed for the
 viewed area, including standard connection metadata. The GPX file is not

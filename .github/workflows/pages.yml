@@ -42,7 +42,6 @@ jobs:
       - name: Build static site
         env:
           VITE_GOOGLE_CLIENT_ID: ${{ vars.GOOGLE_CLIENT_ID || '611550016094-iop2o1ramh912lc4lqtu51vitakro0h4.apps.googleusercontent.com' }}
-          VITE_CLOUDFLARE_WEB_ANALYTICS_TOKEN: ${{ vars.CLOUDFLARE_WEB_ANALYTICS_TOKEN }}
           VITE_RELEASE_CHANNEL: ${{ github.repository == 'josepinto1989/xpeng-analytics-staging' && 'beta' || 'production' }}
         run: pnpm --dir web build
       - name: Configure GitHub Pages
