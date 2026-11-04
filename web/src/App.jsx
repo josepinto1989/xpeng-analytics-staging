@@ -46,6 +46,8 @@ const phaseKeys = {
   history_read: "phaseHistoryRead",
   history_export: "phaseHistoryExport",
   history_export_complete: "phaseHistoryExportComplete",
+  csv_export: "phaseCsvExport",
+  csv_export_complete: "phaseCsvExportComplete",
   persistent_history_save: "phasePersistentHistorySave",
   persistent_history_saved: "phasePersistentHistorySaved",
   drive_backup_save: "phaseDriveBackupSave",
@@ -81,6 +83,7 @@ const errorKeys = {
   multiple_histories: "errorMultipleHistories",
   invalid_gpx: "errorInvalidGpx",
   gps_trim_too_large: "errorGpsTrimTooLarge",
+  csv_export_too_large: "errorCsvExportTooLarge",
 };
 
 function formatNumber(value, locale, options = {}) {
@@ -522,6 +525,18 @@ export default function App() {
         setTimeout(() => URL.revokeObjectURL(url), 1000);
         setBusy(false);
         setProgress({ percent: 100, phase: "history_export_complete" });
+      } else if (message.type === "consolidated_csv_exported") {
+        const blob = message.payload instanceof Blob ? message.payload : new Blob([message.payload], { type: "application/zip" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = message.filename || "xpeng-consolidated-csv.zip";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        setBusy(false);
+        setProgress({ percent: 100, phase: "csv_export_complete" });
       } else if (message.type === "reset_complete") {
         additionalQueueRef.current = [];
         pendingOriginalArchivesRef.current = [];
@@ -1106,6 +1121,15 @@ export default function App() {
     workerRef.current.postMessage({ type: "export_history" });
   };
 
+  const exportConsolidatedCsv = () => {
+    if (!snapshot || busy || !engineReady || workerModeRef.current !== "native") return;
+    cancelRequestedRef.current = false;
+    setBusy(true);
+    setError(null);
+    setProgress({ percent: 2, phase: "csv_export" });
+    workerRef.current.postMessage({ type: "export_consolidated_csv", applicationVersion: APP_VERSION });
+  };
+
   const saveCustomCharts = (charts) => {
     if (!snapshotRef.current || !engineReady || workerModeRef.current !== "native") return;
     workerRef.current.postMessage({ type: "set_custom_charts", charts });
@@ -1184,6 +1208,7 @@ export default function App() {
       onChooseAdditional={chooseAdditionalFiles}
       onChooseHistory={chooseHistory}
       onExport={exportHistory}
+      onExportConsolidatedCsv={exportConsolidatedCsv}
       onSaveCustomCharts={saveCustomCharts}
       onSaveJourneyGroups={saveJourneyGroups}
       onSaveOwnership={saveOwnership}

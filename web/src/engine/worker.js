@@ -1,4 +1,4 @@
-import { addHistoryRebuildSource, beginHistoryRebuild, buildSnapshot, clearDetailCache, detectAdditionalFileKind, emptyState, exportHistory, finishHistoryRebuild, importArchive, importGps, importHistory, loadRecordDetails, setCustomCharts, setJourneyGroups, setOwnershipMetadata, setRawArchives } from "./native-engine.js";
+import { addHistoryRebuildSource, beginHistoryRebuild, buildSnapshot, clearDetailCache, detectAdditionalFileKind, emptyState, exportConsolidatedCsv, exportHistory, finishHistoryRebuild, importArchive, importGps, importHistory, loadRecordDetails, setCustomCharts, setJourneyGroups, setOwnershipMetadata, setRawArchives } from "./native-engine.js";
 
 let state = emptyState();
 let queue = Promise.resolve();
@@ -23,7 +23,7 @@ const guardedProgress = (percent, phase, detail = "") => {
 
 function errorCode(error) {
   const message = String(error?.message ?? error);
-  if (["invalid_archive", "missing_families", "invalid_data", "invalid_gpx", "gps_trim_too_large", "out_of_memory", "history_version", "history_integrity", "engine_error", "cancelled"].includes(message)) return message;
+  if (["invalid_archive", "missing_families", "invalid_data", "invalid_gpx", "gps_trim_too_large", "out_of_memory", "history_version", "history_integrity", "csv_export_too_large", "engine_error", "cancelled"].includes(message)) return message;
   if (message.includes("memory") || message.includes("allocation")) return "out_of_memory";
   return "unknown_error";
 }
@@ -98,6 +98,12 @@ async function handle(message) {
     const date = new Date().toISOString().slice(0, 10);
     progress(100, "history_export_complete", "Done");
     self.postMessage({ type: "history_exported", purpose: message.purpose || "download", filename: `xpeng-analytics-history-${date}.xpeng`, metadata: { format: state.format, version: state.version }, payload });
+    return;
+  }
+  if (message?.type === "export_consolidated_csv") {
+    cancelRequested = false;
+    const result = await exportConsolidatedCsv(state, { applicationVersion: message.applicationVersion }, guardedProgress);
+    self.postMessage({ type: "consolidated_csv_exported", filename: result.filename, payload: result.payload, manifest: result.manifest });
     return;
   }
   if (message?.type === "import_history") {

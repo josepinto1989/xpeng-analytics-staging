@@ -1,6 +1,6 @@
 # Roadmap
 
-## Status after the v2.7.5 audit
+## Status after the v2.7.6 Beta audit
 
 The production browser application has publicly released the core work from
 phases 1–17. The public Beta now also includes phases 18–20 and the phase 21
@@ -11,21 +11,31 @@ content.
 
 Version 2.7.5 was owner-validated on 3 November 2026. The final audit found a
 time-zone issue in time-of-use charging costs, incomplete Drive privacy copy,
-and a release-tag mismatch. Those corrections are now prepared as
-`2.7.6-beta.1` for one final owner smoke test. Production remains unchanged.
+and a release-tag mismatch. Those corrections are now deployed as
+`2.7.6-beta.1`. The Beta also includes the final accessibility corrections,
+compact journey editing, the four-column charging-habits layout, more careful
+battery-estimate wording, the smaller application logo, and numeric ordering
+of the driving speed and accelerator-use bands. Automated tests, the
+production build, GitHub Actions, and the public Beta deployment pass. One
+final owner smoke test remains before production promotion; production itself
+is unchanged. Promotion is intentionally paused while the next local-only
+portability work is tested.
 
 Phases 7 and 10 remain open only for compatibility, performance, and map-format
 improvements. They are not blockers for the current public product.
 
 ## Next implementation order
 
-### Next 1 — Validate v2.7.6-beta.1 and promote the final build
+### Paused — Validate v2.7.6-beta.1 and promote the final build
 
-**Status: audit corrections implemented; awaiting owner validation on Beta.**
+**Status: deployed to Beta and owner-validated; production promotion is paused
+until the local Phase 22 work is complete.**
 
-1. Run the final automated tests, production build, repository audit, and
-   desktop/mobile smoke tests from the exact release commit.
-2. Update the English README, user guides, changelog, release notes, and
+1. Complete the owner smoke test with a real `.xpeng` history in Firefox and
+   Chromium, concentrating on Driving, Journeys, Charging, time-of-use costs,
+   mobile navigation, and Google Drive restore. Automated tests, build,
+   accessibility, SEO, and the synthetic desktop/mobile checks are complete.
+2. Finalise the English README, user guides, changelog, release notes, and
    publication checklist so they describe phases 18–21 consistently.
 3. After validation, promote the reviewed scope as `v2.7.6`; do not reuse the
    existing `v2.7.5` tag that points to an earlier Beta commit.
@@ -113,18 +123,32 @@ signals or location data.
 5. Complete the code, performance, accessibility, and cross-browser regression
    review required for the combined release.
 
-### Next 2 — Phase 22: advanced data portability
+### Current — Phase 22: advanced data portability
+
+**Status: the consolidated CSV export is available in `v2.8.0-beta.1` for owner
+testing. Production is unchanged. Password-protected `.xpeng` histories are
+the next task.**
 
 1. Add local, worker-based export of consolidated operation, energy, and status
    CSVs with a manifest and checksums.
-2. Preserve recognised extra columns where safe and report conflicts or skipped
-   inputs clearly.
+2. Preserve recognised columns where safe and report empty, unsafe, or unknown
+   source columns that could not be retained by the production importer.
 3. Prototype an optional password-encrypted `.xpeng` container without changing
    existing histories or the normal Google Drive workflow.
 4. Validate large-history memory use, corruption detection, wrong passwords,
    and cross-browser round trips before presenting encryption as stable.
 
-### Next 3 — Phase 23: native local and offline applications
+### Next — Complete Phase 22 with password-protected `.xpeng`
+
+1. Design a versioned authenticated-encryption wrapper around the current
+   `.xpeng` payload using Web Crypto.
+2. Add local export and restore without storing the password or derived key.
+3. Validate wrong passwords, altered files, large histories, and Firefox,
+   Chromium, and Edge round trips before considering publication.
+4. Keep existing unencrypted histories and the normal Drive workflow fully
+   compatible.
+
+### After Phase 22 — Phase 23: native local and offline applications
 
 1. Select the packaging approach shared by Windows, macOS, and Linux.
 2. Reuse the current interface, analytics engine, reports, and `.xpeng` format.
@@ -673,6 +697,11 @@ maintenance.
 Add optional power-user tools without complicating the normal ZIP-to-dashboard
 workflow. The existing standalone CSV consolidator is a design reference only;
 its VDB format and version 3 `.xpeng` writer will not be integrated directly.
+
+**Beta implementation status:** the consolidated CSV package, manifest,
+checksums, bounded month-by-month generation, and user-facing warnings are
+complete in `v2.8.0-beta.1` and awaiting owner validation. Password-protected
+`.xpeng` export and restore remain to be implemented. Production is unchanged.
 
 - Add a local **Export consolidated CSVs** action in an Advanced tools area for
   users who deliberately want the recognised operation, energy, and status

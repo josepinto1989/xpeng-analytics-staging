@@ -35,6 +35,23 @@ The stable website remains available at:
 4. **Compare** — choose two date periods and verify totals, percentage changes,
    and aligned daily charts.
 
+## Phase 22 test area — v2.8.0-beta.1
+
+1. Import or restore a representative `.xpeng` history.
+2. Open **Data → Advanced data export** and choose **Export consolidated
+   CSVs**.
+3. Confirm that the downloaded ZIP contains `driving_operation.csv`,
+   `driving_power_energy.csv`, `driving_status.csv`, and `manifest.json`.
+4. Open the CSVs in Excel or LibreOffice and confirm that timestamps, negative
+   telemetry, and decimal values remain usable as data.
+5. Compare the manifest coverage and row counts with the imported history and
+   confirm that all three SHA-256 records are present.
+6. On a long history, confirm that the browser remains responsive and the
+   progress message changes while months are processed.
+
+This Beta does not yet add password protection to `.xpeng` histories. That is
+the next Phase 22 step and will be tested separately.
+
 Please report the browser, device, XPENG model, imported period, and the exact
 steps that produced an unexpected result. Do not attach private vehicle data to
 a public issue unless it has been deliberately anonymised.

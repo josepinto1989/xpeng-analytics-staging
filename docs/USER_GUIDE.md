@@ -311,6 +311,21 @@ the current session, displays
 imported-file history, or clears the session. It also contains the optional
 persistent-history controls.
 
+The **Advanced data export** panel creates a local ZIP for deliberate external
+analysis. It contains `driving_operation.csv`, `driving_power_energy.csv`,
+`driving_status.csv`, and `manifest.json`. Each CSV uses UTF-8, comma-separated
+values, CRLF line endings, UTC ISO timestamps, Unix seconds, and stable XPENG
+Analytics field names. The manifest describes the columns and source aliases,
+coverage, row counts, SHA-256 checksums, and any empty, unknown, unsafe, or
+sensitive source columns that were omitted.
+
+Generation runs in the import worker and reads monthly history blocks in
+sequence, rather than expanding the complete detailed history at once. Keep
+the tab open until the download starts. The resulting files may still contain
+vehicle identifiers and timestamped raw telemetry, so protect them like the
+original XPENG export. This CSV package is intended for personal analysis; it
+is not the normal backup format and cannot replace a `.xpeng` history.
+
 Recognised GPS CSV files can be imported directly or inside a ZIP. Matching is
 still automatic and based on timestamps; diagnostics identify partial matches,
 sparse tracks, and likely clock differences.

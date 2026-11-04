@@ -99,6 +99,10 @@ storage destination controlled by the user.
 - Data-quality coverage, signal availability, and gaps in the exported
   telemetry. Odometer-gap alerts include their date and affected distance and
   can be dismissed, cleared, or restored without removing any vehicle data.
+- An advanced local export for personal analysis that packages consolidated
+  operation, energy, and status CSVs with a manifest and SHA-256 checksums.
+  Large histories are read month by month; skipped or unavailable source
+  columns are documented instead of being silently invented.
 - A bilingual PDF report for a selected period, including optional estimated
   electricity costs, AC/DC use, regeneration, peak charging power, and useful
   journey comparisons for company-car or expense reporting.
@@ -147,6 +151,9 @@ dark themes.
    individual GPX files, or ZIPs containing GPX. XPENG Analytics clips
    continuous recordings to the exact trip times and chooses duplicate routes
    automatically.
+6. For external analysis, open **Data → Advanced data export** to download the
+   consolidated CSV package. Treat it like the original XPENG export because
+   it may contain identifying and timestamped vehicle telemetry.
 
 For detailed instructions, filters, reports, portable histories, units, and
 troubleshooting, read the **[English user guide](docs/USER_GUIDE.md)** or the

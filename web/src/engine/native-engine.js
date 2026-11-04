@@ -7,6 +7,7 @@ import { validateOwnershipMetadata } from "../ownership-metadata.js";
 import { mergeRawArchiveRegistry, normaliseRawArchiveRegistry, rawArchiveRecord } from "../raw-archive-registry.js";
 import { bestZeroToHundredSeconds } from "../lifetime-highlights.js";
 import { CURRENT_HISTORY_VERSION, SUPPORTED_HISTORY_VERSIONS } from "../history-version.js";
+import { ExportFileBuilder, createStoredZip, csvCell } from "./csv-export.js";
 
 const FAMILY_MARKERS = {
   operation: "driving_operation",
@@ -1047,6 +1048,99 @@ async function toSegmentedState(rawState, report = () => {}) {
 
 async function loadShard(shard, report = () => {}) {
   return importLegacyHistory(shard.payload, report);
+}
+
+const CSV_FAMILIES = ["operation", "energy", "status"];
+const CSV_FILENAMES = { operation: "driving_operation.csv", energy: "driving_power_energy.csv", status: "driving_status.csv" };
+const SAFE_EXPORT_COLUMN = /^[a-z][a-z0-9_]{0,80}$/;
+const SENSITIVE_EXPORT_COLUMNS = new Set(["vin"]);
+
+function csvSourceAliases(family) {
+  return Object.fromEntries((SPECS[family] || []).map(([source, target, aliases]) => [target, [...new Set([source, ...(aliases || [])])]]));
+}
+
+function exportQualityWarnings(snapshot) {
+  const events = snapshot?.quality?.events || [], warnings = new Set();
+  if (events.some((row) => row.rule === "duplicate_timestamp")) warnings.add("duplicate_timestamps_deduplicated");
+  if (events.some((row) => row.rule === "unsorted_rows")) warnings.add("unsorted_rows_reordered");
+  if (events.some((row) => row.rule === "invalid_values" || row.rule === "invalid_timer")) warnings.add("invalid_values_omitted");
+  if (events.some((row) => row.rule === "odometer_coverage_gap")) warnings.add("telemetry_coverage_gaps_detected");
+  return [...warnings];
+}
+
+export async function exportConsolidatedCsv(state, options = {}, report = () => {}) {
+  const segmented = state.segmented ? state : await toSegmentedState(state, report);
+  const shards = segmented.shards || [], schema = Object.fromEntries(CSV_FAMILIES.map((family) => [family, new Set()]));
+  const empty = Object.fromEntries(CSV_FAMILIES.map((family) => [family, new Set()]));
+  const unknown = Object.fromEntries(CSV_FAMILIES.map((family) => [family, new Set()]));
+  const unsafe = Object.fromEntries(CSV_FAMILIES.map((family) => [family, new Set()]));
+  const coverage = Object.fromEntries(CSV_FAMILIES.map((family) => [family, { rows: 0, firstUtc: null, lastUtc: null, model: "" }]));
+
+  for (let index = 0; index < shards.length; index++) {
+    const raw = await loadShard(shards[index], report);
+    for (const family of CSV_FAMILIES) {
+      const stream = raw.streams?.[family]; if (!stream) continue;
+      const emptyColumns = new Set(stream.stats?.emptyColumns || []);
+      for (const name of Object.keys(stream.columns || {})) {
+        if (!SAFE_EXPORT_COLUMN.test(name) || SENSITIVE_EXPORT_COLUMNS.has(name)) unsafe[family].add(name);
+        else if (emptyColumns.has(name)) empty[family].add(name);
+        else { schema[family].add(name); empty[family].delete(name); }
+      }
+      for (const name of stream.stats?.unknownColumns || []) unknown[family].add(name);
+      const target = coverage[family], count = Number(stream.time?.length || 0);
+      target.rows += count; target.model ||= stream.model || raw.model || segmented.model || "";
+      if (count) {
+        const first = iso(stream.time[0]), last = iso(stream.time.at(-1));
+        if (!target.firstUtc || first < target.firstUtc) target.firstUtc = first;
+        if (!target.lastUtc || last > target.lastUtc) target.lastUtc = last;
+      }
+    }
+    report(3 + (index + 1) / Math.max(1, shards.length) * 17, "csv_export", `Schema · ${shards[index].key}`);
+  }
+
+  const files = [], fileMetadata = [];
+  for (let familyIndex = 0; familyIndex < CSV_FAMILIES.length; familyIndex++) {
+    const family = CSV_FAMILIES[familyIndex], columns = [...schema[family]].sort((a, b) => a.localeCompare(b));
+    const builder = new ExportFileBuilder(CSV_FILENAMES[family]);
+    builder.appendText(["timestamp_utc", "timer_unix", "vmodel", ...columns].map(csvCell).join(",") + "\r\n");
+    let written = 0;
+    for (let shardIndex = 0; shardIndex < shards.length; shardIndex++) {
+      const raw = await loadShard(shards[shardIndex], report), stream = raw.streams?.[family];
+      if (!stream?.time?.length) continue;
+      let buffer = [];
+      for (let row = 0; row < stream.time.length; row++) {
+        const values = [iso(stream.time[row]), stream.time[row], stream.model || raw.model || segmented.model || ""];
+        for (const name of columns) values.push(stream.columns?.[name]?.[row]);
+        buffer.push(values.map(csvCell).join(",")); written++;
+        if (buffer.length >= 1024) { builder.appendText(buffer.join("\r\n") + "\r\n"); buffer = []; }
+      }
+      if (buffer.length) builder.appendText(buffer.join("\r\n") + "\r\n");
+      const completed = familyIndex * shards.length + shardIndex + 1, total = CSV_FAMILIES.length * Math.max(1, shards.length);
+      report(20 + completed / total * 66, "csv_export", `${family} · ${shards[shardIndex].key}`);
+    }
+    const file = builder.finish({ family, rows: written, columns }); files.push(file);
+    fileMetadata.push({ family, filename: file.name, rows: written, bytes: file.bytes, sha256: file.sha256, firstUtc: coverage[family].firstUtc, lastUtc: coverage[family].lastUtc, columns: ["timestamp_utc", "timer_unix", "vmodel", ...columns], sourceAliases: csvSourceAliases(family), emptyColumnsOmitted: [...empty[family]].filter((name) => !schema[family].has(name)).sort(), unknownSourceColumnsOmitted: [...unknown[family]].sort(), unsafeColumnsOmitted: [...unsafe[family]].sort() });
+  }
+
+  const omittedUnknown = fileMetadata.some((file) => file.unknownSourceColumnsOmitted.length), omittedUnsafe = fileMetadata.some((file) => file.unsafeColumnsOmitted.length);
+  const manifest = {
+    format: "xpeng-analytics-consolidated-csv/v1",
+    exportedAtUtc: new Date().toISOString(),
+    applicationVersion: String(options.applicationVersion || "unknown"),
+    source: { historyFormat: segmented.format, historyVersion: segmented.version, model: segmented.model || "", importCount: segmented.imports?.length || 0, monthShardCount: shards.length },
+    csv: { encoding: "UTF-8", delimiter: ",", lineEnding: "CRLF", decimalSeparator: ".", timestamps: "UTC ISO 8601 and Unix seconds", missingValue: "empty cell", formulaInjectionProtection: "Text beginning with =, +, -, or @ is prefixed with an apostrophe." },
+    files: fileMetadata,
+    warnings: [...exportQualityWarnings(segmented.snapshot), ...(omittedUnknown ? ["unknown_source_columns_not_retained_by_importer"] : []), ...(omittedUnsafe ? ["unsafe_or_sensitive_columns_omitted"] : [])],
+    notes: ["Rows are ordered by timestamp and duplicate timestamps retain the most recently imported observation.", "Column names are stable XPENG Analytics field names; source aliases are listed per file.", "Blank cells represent unavailable, invalid, or omitted values."],
+  };
+  const manifestBuilder = new ExportFileBuilder("manifest.json", "application/json;charset=utf-8");
+  manifestBuilder.appendText(JSON.stringify(manifest, null, 2) + "\n");
+  const manifestFile = manifestBuilder.finish();
+  report(92, "csv_export", "Creating ZIP");
+  const payload = createStoredZip([...files, manifestFile]);
+  const date = new Date().toISOString().slice(0, 10);
+  report(100, "csv_export_complete", "Done");
+  return { filename: `xpeng-consolidated-csv-${date}.zip`, payload, manifest };
 }
 
 async function loadShardSnapshot(shard, report = () => {}) {

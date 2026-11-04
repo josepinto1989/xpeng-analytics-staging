@@ -324,6 +324,21 @@ exportar a sessão atual, consultar os
 ficheiros importados ou limpar a sessão. Inclui também os controlos opcionais
 de histórico local persistente.
 
+O painel **Exportação avançada de dados** cria localmente um ZIP destinado a
+análise externa deliberada. Inclui `driving_operation.csv`,
+`driving_power_energy.csv`, `driving_status.csv` e `manifest.json`. Os CSVs
+usam UTF-8, vírgulas, linhas CRLF, timestamps UTC em ISO, segundos Unix e nomes
+de campos estáveis do XPENG Analytics. O manifesto documenta colunas e aliases
+de origem, cobertura, número de linhas, checksums SHA-256 e campos vazios,
+desconhecidos, inseguros ou sensíveis que tenham sido omitidos.
+
+A criação decorre no worker de importação e lê os blocos mensais do histórico
+em sequência, sem expandir todo o detalhe ao mesmo tempo. Mantém o separador
+aberto até começar o download. Os ficheiros resultantes podem conter
+identificadores do veículo e telemetria bruta com timestamps; protege-os como
+a exportação XPENG original. Este pacote CSV serve para análise pessoal, não é
+o formato normal de cópia de segurança e não substitui um histórico `.xpeng`.
+
 Ficheiros GPS CSV reconhecidos podem ser importados diretamente ou dentro de
 um ZIP. A associação continua automática pelos timestamps; os diagnósticos
 assinalam correspondências parciais, registos esparsos e possíveis diferenças

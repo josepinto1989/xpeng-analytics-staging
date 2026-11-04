@@ -2,7 +2,22 @@
 
 All notable public changes are documented here.
 
-## Unreleased
+## 2.8.0-beta.1 — 2026-11-04
+
+- Added a local advanced export that creates one ZIP containing consolidated
+  operation, energy, and status CSV files plus a JSON manifest.
+- Added per-file SHA-256 checksums, UTC and Unix timestamps, source-alias
+  documentation, and explicit lists of empty, unknown, unsafe, or sensitive
+  columns omitted from the consolidated export.
+- Built the CSV package month by month in the import worker so long histories
+  do not require every detailed shard to remain expanded in memory at once.
+- Protected spreadsheet text cells from formula execution while preserving
+  negative telemetry values as numeric cells.
+- Added clear warnings that consolidated telemetry may contain vehicle
+  identifiers and should be handled like the original XPENG export.
+- Published this CSV portion of Phase 22 only to the public Beta for owner
+  testing; password-protected `.xpeng` histories remain the next implementation
+  step.
 
 ## 2.7.6-beta.1 — 2026-11-03
 
