@@ -19,7 +19,9 @@ FORBIDDEN_SUFFIXES = {
 # Split private-project words so this scanner does not trigger on itself.
 FORBIDDEN_TEXT = {
     "third-party telemetry code": re.compile("ev" + "dash", re.IGNORECASE),
-    "private hosting code": re.compile("cloud" + "flare|workers\\.dev", re.IGNORECASE),
+    # Public Cloudflare Web Analytics references are allowed. Keep blocking
+    # concrete private Worker hostnames rather than the provider's name.
+    "private hosting endpoint": re.compile(r"(?:[A-Z0-9-]+\.)+workers\.dev", re.IGNORECASE),
     "private object storage": re.compile(r"\b" + "r2" + r"\b", re.IGNORECASE),
     "email address": re.compile(r"[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}", re.IGNORECASE),
     "GitHub token": re.compile(r"\bgh[pousr]_[A-Za-z0-9_]{20,}\b"),

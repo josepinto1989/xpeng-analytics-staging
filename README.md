@@ -167,6 +167,9 @@ verified.
   can be deleted from the **Data** page.
 - Vehicle identifiers are not retained by the fast import engine or included in
   the dashboard snapshot.
+- Optional aggregate visit and performance analytics remain disabled until the
+  visitor explicitly allows Cloudflare Web Analytics. The beacon never receives
+  XPENG files, routes, vehicle metrics, chart values, or user-entered records.
 - The public repository contains synthetic tests only — never real vehicle
   exports, histories, identifiers, or location data.
 - Portable histories are not encrypted. Treat them like the original XPENG

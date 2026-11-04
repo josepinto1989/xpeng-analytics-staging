@@ -17,6 +17,7 @@ const requiredDisclosures = [
   "one-day overlap",
   "does not sell, share or transfer Google user data",
   "Deleting your data",
+  "Cloudflare Web Analytics",
   "open an issue on GitHub",
 ];
 
@@ -37,6 +38,8 @@ for (const [name, source] of [["landing", app], ["dashboard", dashboard]]) {
     throw new Error(`${name} still contains the removed LogbooX website link`);
   }
 }
+
+if (!app.includes("AnalyticsConsent")) throw new Error("Landing and dashboard must expose the analytics consent decision");
 
 for (const message of ["Understand your car through your own data", "how much energy does it consume", "Your data stays under your control", "independent community project"]) {
   if (!about.includes(message)) throw new Error(`About page is missing expected content: ${message}`);
