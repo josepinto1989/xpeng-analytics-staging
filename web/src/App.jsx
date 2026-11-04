@@ -136,7 +136,7 @@ const isNativeHistory = (buffer) => {
 
 export default function App() {
   const [locale, setLocale] = useState(defaultLocale);
-  const [theme, setTheme] = useState("light");
+  const [theme, setTheme] = useState(() => BETA_CHANNEL ? "dark" : "light");
   const [tutorialStatus, setTutorialStatus] = useState(() => readTutorialState());
   const [tutorialMode, setTutorialMode] = useState(null);
   const [dashboardTutorialEligible, setDashboardTutorialEligible] = useState(null);

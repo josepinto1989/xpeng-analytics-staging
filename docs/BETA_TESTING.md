@@ -3,6 +3,26 @@
 The Beta website is a public development channel for testing features before
 they reach the stable XPENG Analytics website.
 
+## XPENG Analytics 3.0 Beta — Driver Cockpit
+
+This Beta tests a new Driver Cockpit visual system. It uses the same local
+processing engine and compatible `.xpeng` histories as the official site. The
+official site is not changed by this test.
+
+1. Open an existing `.xpeng` history and confirm Home shows distance,
+   consumption, charging cost (when a tariff exists), performance, vehicle
+   pulse, and recent events.
+2. Open each of the five navigation areas and confirm every existing page is
+   still available through its group.
+3. Open Data and confirm import, export, local history, Google Drive, original
+   ZIP/GPX retention, and backup settings are unchanged.
+4. Switch between 7, 15, 30 days, all data, and a custom period. Confirm Home
+   and its comparison labels update.
+5. Use the Vehicle pulse and recent-event shortcuts and confirm they open the
+   expected Battery, Tyres, Insights, Journey, or Charging detail.
+6. Check English and Portuguese, metric and imperial units, bar and PSI, light
+   and dark themes, desktop and mobile layouts.
+
 ## Open the Beta
 
 <https://josepinto1989.github.io/xpeng-analytics-staging/>

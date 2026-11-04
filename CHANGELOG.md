@@ -2,6 +2,20 @@
 
 All notable public changes are documented here.
 
+## 3.0.0-beta.1 — 2026-11-04
+
+- Introduced the staging-only Driver Cockpit visual direction with a calmer,
+  dark graphite interface and clearer information hierarchy.
+- Reorganised the dashboard around five primary areas: Home, Driving, Energy,
+  Vehicle, and Reports, while retaining every existing specialist page.
+- Rebuilt Home around period distance, efficiency and charging cost, a combined
+  performance chart, a vehicle-pulse summary, and a recent activity timeline.
+- Kept the existing `.xpeng` format, original ZIP/GPX retention, Google Drive
+  backup, local history, import pipeline, reports, exports and calculations
+  unchanged.
+- Published this redesign only to the Beta channel for validation; the official
+  2.8 release remains untouched.
+
 ## 2.8.0 — 2026-11-04
 
 - Added a data-protection centre, Charging Lab, parked-energy investigator,

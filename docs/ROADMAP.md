@@ -1,5 +1,14 @@
 # Roadmap
 
+## Version 3 design track — Phase 23: Driver Cockpit (Beta)
+
+- [x] Establish the selected Driver Cockpit visual system on the Beta channel.
+- [x] Reduce primary navigation to Home, Driving, Energy, Vehicle, and Reports.
+- [x] Rebuild Home with period KPIs, performance, vehicle pulse, and recent activity.
+- [x] Preserve all Data, Drive, RAW, GPX, `.xpeng`, report, and export workflows.
+- [ ] Validate the redesign with large histories on desktop and mobile.
+- [ ] Refine each specialist dashboard after owner feedback before any production release.
+
 ## Status after v2.8.0
 
 The production browser application includes phases 1–21 and the completed CSV
