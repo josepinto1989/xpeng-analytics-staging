@@ -1,6 +1,6 @@
 # Publication checklist
 
-## v2.8.0 release candidate — 2026-11-04
+## v2.8.0 — 2026-11-04
 
 - [x] Consolidated operation, energy, and status CSV package contains a
   documented manifest and verified SHA-256 checksums.
@@ -13,7 +13,7 @@
 - [x] Translation parity, browser regression tests, Python tests, public-tree
   audit, production build, and Beta GitHub workflows pass.
 - [x] Owner confirmed the consolidated CSV export on the public Beta.
-- [ ] Owner smoke test of the compact button and processed Journey/Charging
+- [x] Owner smoke test of the compact button and processed Journey/Charging
   CSVs in Firefox and Chromium.
 - [ ] Final production version, tag, GitHub release, deployment, and post-deploy
   smoke test.

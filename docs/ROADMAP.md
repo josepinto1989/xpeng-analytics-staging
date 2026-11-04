@@ -1,47 +1,31 @@
 # Roadmap
 
-## Status after the v2.7.6 Beta audit
+## Status after v2.8.0
 
-The production browser application has publicly released the core work from
-phases 1–17. The public Beta now also includes phases 18–20 and the phase 21
-usability consolidation: practical intelligence, ownership tools, route and
-vehicle intelligence, the 2.7.5 visual refinement, compact navigation,
-collapsible dashboard sections, and bounded scrolling for long technical
-content.
+The production browser application includes phases 1–21 and the completed CSV
+portion of phase 22. This covers practical intelligence, ownership tools,
+route and vehicle analysis, the usability consolidation, consolidated raw-data
+CSV packages, and processed journey and charging CSV exports.
 
-Version 2.7.5 was owner-validated on 3 November 2026. The final audit found a
-time-zone issue in time-of-use charging costs, incomplete Drive privacy copy,
-and a release-tag mismatch. Those corrections are now deployed as
-`2.7.6-beta.1`. The Beta also includes the final accessibility corrections,
-compact journey editing, the four-column charging-habits layout, more careful
-battery-estimate wording, the smaller application logo, and numeric ordering
-of the driving speed and accelerator-use bands. Automated tests, the
-production build, GitHub Actions, and the public Beta deployment pass. One
-final owner smoke test remains before production promotion; production itself
-is unchanged. Promotion is intentionally paused while the next local-only
-portability work is tested.
+The combined release was owner-validated on 4 November 2026. Automated browser
+and Python tests, the production build, public-tree audit, dependency audit,
+GitHub Actions, and production deployment are part of the release checklist.
+Password-protected `.xpeng` export and restore remain the next phase 22 task;
+they are not required to open existing histories.
 
 Phases 7 and 10 remain open only for compatibility, performance, and map-format
 improvements. They are not blockers for the current public product.
 
 ## Next implementation order
 
-### Paused — Validate v2.7.6-beta.1 and promote the final build
+### Released — v2.8.0 consolidation
 
-**Status: deployed to Beta and owner-validated; production promotion is paused
-until the local Phase 22 work is complete.**
+**Status: owner-validated and promoted to production.**
 
-1. Complete the owner smoke test with a real `.xpeng` history in Firefox and
-   Chromium, concentrating on Driving, Journeys, Charging, time-of-use costs,
-   mobile navigation, and Google Drive restore. Automated tests, build,
-   accessibility, SEO, and the synthetic desktop/mobile checks are complete.
-2. Finalise the English README, user guides, changelog, release notes, and
-   publication checklist so they describe phases 18–21 consistently.
-3. After validation, promote the reviewed scope as `v2.7.6`; do not reuse the
-   existing `v2.7.5` tag that points to an earlier Beta commit.
-4. Promote the reviewed commit to the production repository and verify the
-   deployed application before announcing it.
-5. Prepare the public release post only after the production smoke test passes.
+1. Release phases 18–21 as a single reviewed production update.
+2. Release the consolidated and processed CSV portion of phase 22.
+3. Preserve backward compatibility with existing `.xpeng` histories.
+4. Keep the password-encrypted history work isolated as the next task.
 
 ### Completed — Ownership, expenses, and useful labels
 
@@ -72,7 +56,7 @@ signals or location data.
 
 ### Completed — Phase 18: practical intelligence
 
-**Status: implemented and owner-validated in v2.7.5 on the public Beta.**
+**Status: implemented, owner-validated, and released in v2.8.0.**
 
 1. Add a data-protection centre that combines telemetry freshness, XPENG's
    rolling recovery window, portable-history state, Drive freshness, RAW-source
@@ -89,7 +73,7 @@ signals or location data.
 
 ### Completed — Phase 19: smart ownership and costs
 
-**Status: implemented and owner-validated in v2.7.5 on the public Beta.**
+**Status: implemented, owner-validated, and released in v2.8.0.**
 
 1. Add optional origin, destination, purpose, and comments to journeys.
 2. Suggest repeated places and labels locally from GPS, odometer continuity,
@@ -100,7 +84,7 @@ signals or location data.
 
 ### Completed — Phase 20: route and vehicle intelligence
 
-**Status: implemented and owner-validated in v2.7.5 on the public Beta.**
+**Status: implemented, owner-validated, and released in v2.8.0.**
 
 1. Colour matched GPS routes by speed, power, regeneration, or consumption.
 2. Use GPX elevation where available and synchronise route segments with the
@@ -110,7 +94,7 @@ signals or location data.
 
 ### Completed — Phase 21: usability and release consolidation
 
-**Status: implemented and owner-validated in v2.7.5 on the public Beta.**
+**Status: implemented, owner-validated, and released in v2.8.0.**
 
 1. Simplify the navigation around common owner tasks while retaining advanced
    tools in expandable groups.
@@ -123,11 +107,10 @@ signals or location data.
 5. Complete the code, performance, accessibility, and cross-browser regression
    review required for the combined release.
 
-### Current — Phase 22: advanced data portability
+### Current — Phase 22: advanced data portability and encrypted history
 
-**Status: the consolidated and processed CSV exports are available in
-`v2.8.0-beta.2` for owner testing. Production is unchanged. Password-protected `.xpeng` histories are
-the next task.**
+**Status: the consolidated and processed CSV exports are released in v2.8.0.
+Password-protected `.xpeng` histories are the next task.**
 
 1. Add local, worker-based export of consolidated operation, energy, and status
    CSVs with a manifest and checksums.
@@ -698,10 +681,10 @@ Add optional power-user tools without complicating the normal ZIP-to-dashboard
 workflow. The existing standalone CSV consolidator is a design reference only;
 its VDB format and version 3 `.xpeng` writer will not be integrated directly.
 
-**Beta implementation status:** the consolidated CSV package, manifest,
-checksums, bounded month-by-month generation, processed journey/charging CSVs,
-and user-facing warnings are complete in `v2.8.0-beta.2` and awaiting owner validation. Password-protected
-`.xpeng` export and restore remain to be implemented. Production is unchanged.
+**Implementation status:** the consolidated CSV package, manifest, checksums,
+bounded month-by-month generation, processed journey/charging CSVs, and
+user-facing warnings were released in `v2.8.0`. Password-protected `.xpeng`
+export and restore remain to be implemented.
 
 - Add a local **Export consolidated CSVs** action in an Advanced tools area for
   users who deliberately want the recognised operation, energy, and status

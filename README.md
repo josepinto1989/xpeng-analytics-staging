@@ -1,16 +1,8 @@
-> [!CAUTION]
-> **PUBLIC BETA — NEW FEATURES UNDER TEST**
->
-> This repository and its website are the development channel for XPENG
-> Analytics. Features can change, contain errors, or require a new import.
-> Keep your original XPENG ZIPs and a current `.xpeng` backup. For the stable
-> version, use [XPENG Analytics](https://josepinto1989.github.io/xpeng-analytics/).
-
 <p align="center">
   <img src="web/public/assets/xpeng-analytics-mark-minimal.png" width="88" alt="XPENG Analytics logo">
 </p>
 
-<h1 align="center">XPENG Analytics Beta</h1>
+<h1 align="center">XPENG Analytics</h1>
 
 <p align="center">
   Turn your XPENG Data Act export into useful, private vehicle insights.<br>
@@ -18,19 +10,17 @@
 </p>
 
 <p align="center">
-  <a href="https://josepinto1989.github.io/xpeng-analytics-staging/"><img alt="Open XPENG Analytics Beta" src="https://img.shields.io/badge/open_public_beta-e0a11b?style=for-the-badge"></a>
-  <img alt="Beta channel" src="https://img.shields.io/badge/channel-public_beta-e0a11b?style=for-the-badge">
+  <a href="https://josepinto1989.github.io/xpeng-analytics/"><img alt="Open XPENG Analytics" src="https://img.shields.io/badge/open_XPENG_Analytics-00a77e?style=for-the-badge"></a>
+  <img alt="Latest release" src="https://img.shields.io/badge/release-v2.8.0-00a77e?style=for-the-badge">
   <a href="LICENSE"><img alt="MIT licence" src="https://img.shields.io/github/license/josepinto1989/xpeng-analytics?style=for-the-badge&color=667f7d"></a>
 </p>
 
 <p align="center">
-  <a href="https://josepinto1989.github.io/xpeng-analytics-staging/"><strong>Open the public Beta</strong></a>
-  ·
-  <a href="docs/BETA_TESTING.md">Beta testing guide</a>
+  <a href="https://josepinto1989.github.io/xpeng-analytics/"><strong>Open XPENG Analytics</strong></a>
   ·
   <a href="docs/USER_GUIDE.md">User guide</a>
   ·
-  <a href="https://github.com/josepinto1989/xpeng-analytics-staging/issues">Report a Beta problem</a>
+  <a href="https://github.com/josepinto1989/xpeng-analytics/issues">Report a problem</a>
   ·
   <a href="https://ko-fi.com/mpinto">Support the project</a>
 </p>
@@ -200,6 +190,7 @@ Read the full [privacy notes](PRIVACY.md), [security guidance](SECURITY.md), and
 
 | Document | Purpose |
 | --- | --- |
+| [v2.8.0 release notes](docs/RELEASE_NOTES_2.8.0.md) | Practical intelligence, ownership tools, route analysis, visual refinement, and advanced CSV exports |
 | [User guide](docs/USER_GUIDE.md) | Complete English instructions for using the application |
 | [User guide — European Portuguese](docs/USER_GUIDE.pt-PT.md) | Complete instructions in European Portuguese |
 | [About the project](web/public/about.html) | Why XPENG Analytics exists and what it is designed to do |

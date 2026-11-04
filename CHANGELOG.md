@@ -2,6 +2,23 @@
 
 All notable public changes are documented here.
 
+## 2.8.0 — 2026-11-04
+
+- Added a data-protection centre, Charging Lab, parked-energy investigator,
+  and side-by-side period comparison.
+- Added journey places, purposes, comments, local suggestions, time-of-use and
+  location tariffs, manual charging costs, and owner reminders.
+- Added route colouring, synchronised elevation, improved battery-confidence
+  guidance, tyre observations, and optional front/rear motor analysis.
+- Refined navigation, dashboards, responsive layouts, accessibility, and
+  journey-map performance while keeping specialist tools available.
+- Added an advanced local ZIP export with consolidated operation, energy, and
+  status CSVs, a manifest, and SHA-256 checksums.
+- Added processed journey and charging CSV exports that respect the visible
+  period and list filters.
+- Preserved compatibility with existing `.xpeng` histories and kept all new
+  analysis and exports local to the browser.
+
 ## 2.8.0-beta.2 — 2026-11-04
 
 - Reduced the oversized Advanced data export action to a compact button that
