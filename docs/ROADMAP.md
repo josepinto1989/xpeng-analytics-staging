@@ -18,6 +18,34 @@ improvements. They are not blockers for the current public product.
 
 ## Next implementation order
 
+### Decision checkpoint — after v2.8.0
+
+**Status: no major implementation is active. Collect owner feedback and review
+the XPENG API response before committing to another large phase.**
+
+The stable browser application already covers the main import, history,
+charging, journey, battery, GPS, reporting, ownership, backup, and data-export
+workflows. Future work should now be justified by a clear user problem rather
+than by adding features for their own sake.
+
+1. **Official XPENG data automation — awaiting XPENG.** Reassess only after
+   XPENG confirms whether a public community application can receive suitable
+   API credentials and how each vehicle owner would authorise access. Never
+   expose a shared secret in the browser or weaken the local-first model.
+2. **Password-protected `.xpeng` — validate demand first.** The design remains
+   viable, but adds password recovery, compatibility, Drive, and support
+   complexity. Proceed only if owners want encrypted portable histories rather
+   than relying on their device or Drive security.
+3. **Native desktop applications — deferred.** Revisit Windows, macOS, and
+   Linux packaging only if owners repeatedly ask for automatic local reopening,
+   offline use, or a browser-independent installation.
+4. **Optional extensions — low priority.** PWA installation, demonstration
+   history, multiple vehicles, and offline maps remain research items rather
+   than scheduled releases.
+
+Normal maintenance continues: compatibility with new XPENG exports, confirmed
+bug fixes, performance, security, accessibility, and small requested metrics.
+
 ### Released — v2.8.0 consolidation
 
 **Status: owner-validated and promoted to production.**
@@ -107,10 +135,11 @@ signals or location data.
 5. Complete the code, performance, accessibility, and cross-browser regression
    review required for the combined release.
 
-### Current — Phase 22: advanced data portability and encrypted history
+### Candidate — Complete Phase 22 with encrypted history
 
 **Status: the consolidated and processed CSV exports are released in v2.8.0.
-Password-protected `.xpeng` histories are the next task.**
+Password-protected `.xpeng` histories remain technically planned but require a
+user-demand check before implementation.**
 
 1. Add local, worker-based export of consolidated operation, energy, and status
    CSVs with a manifest and checksums.
@@ -121,7 +150,7 @@ Password-protected `.xpeng` histories are the next task.**
 4. Validate large-history memory use, corruption detection, wrong passwords,
    and cross-browser round trips before presenting encryption as stable.
 
-### Next — Complete Phase 22 with password-protected `.xpeng`
+### If requested — Password-protected `.xpeng`
 
 1. Design a versioned authenticated-encryption wrapper around the current
    `.xpeng` payload using Web Crypto.
@@ -131,7 +160,7 @@ Password-protected `.xpeng` histories are the next task.**
 4. Keep existing unencrypted histories and the normal Drive workflow fully
    compatible.
 
-### After Phase 22 — Phase 23: native local and offline applications
+### Deferred — Phase 23: native local and offline applications
 
 1. Select the packaging approach shared by Windows, macOS, and Linux.
 2. Reuse the current interface, analytics engine, reports, and `.xpeng` format.
@@ -684,7 +713,8 @@ its VDB format and version 3 `.xpeng` writer will not be integrated directly.
 **Implementation status:** the consolidated CSV package, manifest, checksums,
 bounded month-by-month generation, processed journey/charging CSVs, and
 user-facing warnings were released in `v2.8.0`. Password-protected `.xpeng`
-export and restore remain to be implemented.
+export and restore remain a candidate only and should not be implemented until
+owner demand justifies the additional compatibility and support burden.
 
 - Add a local **Export consolidated CSVs** action in an Advanced tools area for
   users who deliberately want the recognised operation, energy, and status
@@ -716,6 +746,9 @@ export and restore remain to be implemented.
 
 Package the existing interface as lightweight native desktop applications for
 Windows, macOS, and Linux while keeping the browser version available.
+
+**Decision status:** deferred after v2.8.0. Reassess only if the browser and
+optional Drive workflow prove insufficient for a meaningful group of owners.
 
 - Reuse the current frontend, import worker, metrics, reports, and `.xpeng`
   format instead of creating a second analytics implementation.
