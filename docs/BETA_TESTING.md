@@ -48,6 +48,10 @@ The stable website remains available at:
    confirm that all three SHA-256 records are present.
 6. On a long history, confirm that the browser remains responsive and the
    progress message changes while months are processed.
+7. In **Journeys**, combine period, search, and classification filters, export
+   the visible CSV, and confirm that only those processed journeys are present.
+8. In **Charging**, combine AC/DC and location filters, export the visible CSV,
+   and confirm the session metrics and any configured costs or tariffs.
 
 This Beta does not yet add password protection to `.xpeng` histories. That is
 the next Phase 22 step and will be tested separately.

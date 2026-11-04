@@ -125,8 +125,8 @@ signals or location data.
 
 ### Current — Phase 22: advanced data portability
 
-**Status: the consolidated CSV export is available in `v2.8.0-beta.1` for owner
-testing. Production is unchanged. Password-protected `.xpeng` histories are
+**Status: the consolidated and processed CSV exports are available in
+`v2.8.0-beta.2` for owner testing. Production is unchanged. Password-protected `.xpeng` histories are
 the next task.**
 
 1. Add local, worker-based export of consolidated operation, energy, and status
@@ -699,8 +699,8 @@ workflow. The existing standalone CSV consolidator is a design reference only;
 its VDB format and version 3 `.xpeng` writer will not be integrated directly.
 
 **Beta implementation status:** the consolidated CSV package, manifest,
-checksums, bounded month-by-month generation, and user-facing warnings are
-complete in `v2.8.0-beta.1` and awaiting owner validation. Password-protected
+checksums, bounded month-by-month generation, processed journey/charging CSVs,
+and user-facing warnings are complete in `v2.8.0-beta.2` and awaiting owner validation. Password-protected
 `.xpeng` export and restore remain to be implemented. Production is unchanged.
 
 - Add a local **Export consolidated CSVs** action in an Advanced tools area for

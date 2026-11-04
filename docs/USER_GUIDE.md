@@ -127,6 +127,11 @@ commute, or a custom label. Classifications do not alter the original XPENG
 telemetry and remain available in search, reports, CSV exports, and future
 `.xpeng` restores.
 
+Choose **Export visible CSV** to download one processed row per journey. The
+file follows the current period, text search, and classification filters and
+includes the metrics already calculated by XPENG Analytics, together with
+labels, notes, GPS availability, and manual-group information.
+
 The selected journey uses stacked full-width charts. Its journey list remains
 available while the detail area is open, making it quicker to compare records.
 
@@ -157,6 +162,12 @@ distinct colours make the charging type visible before opening a session.
 Charging sessions can also be categorized as home, work, public, or custom.
 When a reusable electricity tariff is active, the app estimates charging cost
 from the available energy. This is not an invoice or receipt.
+
+Choose **Export visible CSV** above the charging history to download one
+processed row per session. The file follows the selected period, AC/DC, and
+location filters and includes SOC gain, energy, efficiency, losses, power,
+temperature, displayed range, category, tariff, and estimated cost where
+available.
 
 Charging telemetry also uses stacked full-width charts while the session list
 remains available for quick comparison between charges.

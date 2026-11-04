@@ -2,6 +2,19 @@
 
 All notable public changes are documented here.
 
+## 2.8.0-beta.2 — 2026-11-04
+
+- Reduced the oversized Advanced data export action to a compact button that
+  follows the established Data-page hierarchy.
+- Added processed journey CSV export for the currently visible period, search,
+  and classification filters, including energy, consumption, GPS, manual-group,
+  label, purpose, and calculated average-speed fields.
+- Added processed charging CSV export for the currently visible period, AC/DC,
+  and location filters, including SOC gain, energy, losses, efficiency,
+  temperatures, range, tariff, and estimated-cost fields.
+- Protected text cells in the processed exports against spreadsheet formula
+  execution while preserving numeric values for analysis.
+
 ## 2.8.0-beta.1 — 2026-11-04
 
 - Added a local advanced export that creates one ZIP containing consolidated

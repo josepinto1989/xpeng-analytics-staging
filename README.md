@@ -103,6 +103,9 @@ storage destination controlled by the user.
   operation, energy, and status CSVs with a manifest and SHA-256 checksums.
   Large histories are read month by month; skipped or unavailable source
   columns are documented instead of being silently invented.
+- Processed one-row-per-record CSV exports directly from Journeys and Charging.
+  They follow the visible period and list filters and include the metrics,
+  classifications, notes, tariffs, and estimated costs calculated by the app.
 - A bilingual PDF report for a selected period, including optional estimated
   electricity costs, AC/DC use, regeneration, peak charging power, and useful
   journey comparisons for company-car or expense reporting.

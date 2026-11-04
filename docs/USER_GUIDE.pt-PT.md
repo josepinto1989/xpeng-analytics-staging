@@ -133,6 +133,11 @@ deslocação habitual ou com uma etiqueta personalizada. Esta informação não
 altera a telemetria XPENG e permanece disponível na pesquisa, relatórios, CSV
 e futuros restauros do `.xpeng`.
 
+Escolhe **Exportar CSV visível** para descarregar uma linha processada por
+jornada. O ficheiro respeita o período, pesquisa e classificação atuais e
+inclui as métricas já calculadas pelo XPENG Analytics, etiquetas, notas,
+disponibilidade de GPS e informação sobre grupos manuais.
+
 A jornada selecionada utiliza gráficos empilhados a toda a largura. A lista de
 jornadas continua disponível na área de detalhe para facilitar comparações.
 
@@ -163,6 +168,12 @@ DC; cores distintas identificam o tipo antes de abrir a sessão.
 Também podes categorizar carregamentos como casa, trabalho, público ou
 personalizado. Quando existe uma tarifa de eletricidade ativa, a aplicação
 estima o custo com base na energia disponível. Não é uma fatura nem recibo.
+
+Escolhe **Exportar CSV visível** acima do histórico para descarregar uma linha
+processada por sessão. O ficheiro respeita o período e os filtros AC/DC e de
+local, incluindo ganho de SOC, energia, eficiência, perdas, potência,
+temperatura, autonomia indicada, categoria, tarifa e custo estimado quando
+estiverem disponíveis.
 
 A telemetria de carregamento também utiliza gráficos empilhados a toda a
 largura, mantendo a lista de sessões disponível para comparação rápida.

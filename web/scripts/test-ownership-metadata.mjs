@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { chargeCostBreakdown, chargeEstimatedCost, ownershipMaps, upsertChargeCategory, upsertChargeCost, upsertJourneyDetails, upsertJourneyLabel, upsertReminder, validateOwnershipMetadata } from "../src/ownership-metadata.js";
 import { journeySuggestions, reminderState } from "../src/ownership-intelligence.js";
-import { buildOwnershipCsv } from "../src/ownership-export.js";
+import { buildChargingCsv, buildJourneysCsv, buildOwnershipCsv } from "../src/ownership-export.js";
 
 let ownership=validateOwnershipMetadata();
 ownership=upsertJourneyLabel(ownership,"journey-1","business");
@@ -23,4 +23,10 @@ const suggestions=journeySuggestions({journeyId:"journey-2",distanceKm:42,durati
 assert.equal(suggestions.origins[0]?.value,"Home");
 const csv=buildOwnershipCsv({ownership,journeys:[{journeyId:"journey-1",date:"2026-10-01",distanceKm:42,durationMinutes:35}],charges:[{chargeId:"charge-1",date:"2026-10-02",chargeType:"AC",wallEnergyKwh:20,batteryEnergyKwh:18}]});
 assert.match(csv,/business/);assert.match(csv,/home/);assert.match(csv,/Home/);assert.match(csv,/Office/);assert.match(csv,/4\.25/);assert.match(csv,/manual/);
+const journeysCsv=buildJourneysCsv([{journeyId:"journey-1",date:"2026-10-01",startedAtUtc:"2026-10-01T08:00:00Z",endedAtUtc:"2026-10-01T08:35:00Z",distanceKm:42,durationMinutes:35,drivingMinutes:35,netEnergyKwh:6.3,energyUsedKwh:7,regeneratedKwh:.7,consumptionKwh100:15,maxSpeedKmh:112,tripIds:["trip-1"],gps:{points:20}}],ownership);
+assert.match(journeysCsv,/average_speed_kmh/);assert.match(journeysCsv,/business/);assert.match(journeysCsv,/Client meeting/);assert.match(journeysCsv,/"true"/);
+const chargingCsv=buildChargingCsv([{chargeId:"charge-1",date:"2026-10-02",startedAtUtc:"2026-10-02T21:00:00Z",endedAtUtc:"2026-10-02T23:00:00Z",chargeType:"AC",durationMinutes:120,socStartPct:30,socEndPct:70,wallEnergyKwh:20,batteryEnergyKwh:18,lossKwh:2,efficiencyPct:90,maxPowerKw:11,avgPowerKw:9}],ownership);
+assert.match(chargingCsv,/soc_gain_pct/);assert.match(chargingCsv,/home/);assert.match(chargingCsv,/4\.25/);assert.match(chargingCsv,/manual/);
+const safeCsv=buildJourneysCsv([{journeyId:"=HYPERLINK(\"bad\")",date:"2026-10-01"}],ownership);
+assert.match(safeCsv,/"'=HYPERLINK/);
 console.log("ownership metadata and CSV: ok");
