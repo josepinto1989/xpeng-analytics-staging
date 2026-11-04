@@ -15,7 +15,7 @@
 - [x] Owner confirmed the consolidated CSV export on the public Beta.
 - [x] Owner smoke test of the compact button and processed Journey/Charging
   CSVs in Firefox and Chromium.
-- [ ] Final production version, tag, GitHub release, deployment, and post-deploy
+- [x] Final production version, tag, GitHub release, deployment, and post-deploy
   smoke test.
 
 ## v2.7.6-beta.1 — 2026-11-03
