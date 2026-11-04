@@ -35,7 +35,7 @@ The stable website remains available at:
 4. **Compare** — choose two date periods and verify totals, percentage changes,
    and aligned daily charts.
 
-## Phase 22 test area — v2.8.0-beta.1
+## Phase 22 test area — v2.8.0-beta.2
 
 1. Import or restore a representative `.xpeng` history.
 2. Open **Data → Advanced data export** and choose **Export consolidated

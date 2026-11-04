@@ -1,5 +1,23 @@
 # Publication checklist
 
+## v2.8.0 release candidate — 2026-11-04
+
+- [x] Consolidated operation, energy, and status CSV package contains a
+  documented manifest and verified SHA-256 checksums.
+- [x] CSV generation reads segmented histories month by month in the worker.
+- [x] Journey and charging summary CSVs follow the visible period and list
+  filters and retain numeric values for external analysis.
+- [x] Spreadsheet text cells are protected from formula execution.
+- [x] Advanced Data export uses a compact responsive action instead of the
+  full-width primary-button style.
+- [x] Translation parity, browser regression tests, Python tests, public-tree
+  audit, production build, and Beta GitHub workflows pass.
+- [x] Owner confirmed the consolidated CSV export on the public Beta.
+- [ ] Owner smoke test of the compact button and processed Journey/Charging
+  CSVs in Firefox and Chromium.
+- [ ] Final production version, tag, GitHub release, deployment, and post-deploy
+  smoke test.
+
 ## v2.7.6-beta.1 — 2026-11-03
 
 - [x] Time-of-use tariffs use the same browser-local hour shown in the interface.
