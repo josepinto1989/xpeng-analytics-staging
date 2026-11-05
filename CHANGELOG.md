@@ -2,6 +2,13 @@
 
 All notable public changes are documented here.
 
+## 3.0.0-beta.2 — 2026-11-05
+
+- Completed the Driver Cockpit light palette so the complete shell, Home
+  dashboard, vehicle pulse, timeline and detail panels now switch consistently.
+- Persisted the selected light or dark appearance in the browser, with a safe
+  session-only fallback when browser storage is unavailable.
+
 ## 3.0.0-beta.1 — 2026-11-04
 
 - Introduced the staging-only Driver Cockpit visual direction with a calmer,

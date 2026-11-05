@@ -129,6 +129,16 @@ function processingProfile() {
 }
 
 const nativeHistoryPrefix = [88, 80, 69, 78, 71, 65, 0];
+const themeStorageKey = "xpeng-analytics-theme";
+const initialTheme = () => {
+  try {
+    const stored = globalThis.localStorage?.getItem(themeStorageKey);
+    if (stored === "light" || stored === "dark") return stored;
+  } catch {
+    // Storage can be unavailable in private or restricted browser contexts.
+  }
+  return BETA_CHANNEL ? "dark" : "light";
+};
 const isNativeHistory = (buffer) => {
   const bytes = new Uint8Array(buffer, 0, Math.min(buffer.byteLength, 8));
   return bytes.length === 8 && nativeHistoryPrefix.every((value, index) => bytes[index] === value) && SUPPORTED_HISTORY_VERSIONS.includes(bytes[7]);
@@ -136,7 +146,7 @@ const isNativeHistory = (buffer) => {
 
 export default function App() {
   const [locale, setLocale] = useState(defaultLocale);
-  const [theme, setTheme] = useState(() => BETA_CHANNEL ? "dark" : "light");
+  const [theme, setTheme] = useState(initialTheme);
   const [tutorialStatus, setTutorialStatus] = useState(() => readTutorialState());
   const [tutorialMode, setTutorialMode] = useState(null);
   const [dashboardTutorialEligible, setDashboardTutorialEligible] = useState(null);
@@ -263,6 +273,11 @@ export default function App() {
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
+    try {
+      globalThis.localStorage?.setItem(themeStorageKey, theme);
+    } catch {
+      // The selected theme still applies to the current session.
+    }
   }, [theme]);
 
   useEffect(() => {
