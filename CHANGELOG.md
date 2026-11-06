@@ -2,6 +2,18 @@
 
 All notable public changes are documented here.
 
+## 3.0.0-beta.3 — 2026-11-06
+
+- Refined the complete dashboard palette in light and dark modes, replacing
+  harsh pure black/white surfaces with calmer graphite and off-white layers.
+- Unified cards, filters, forms, buttons, record lists and settings across all
+  specialist pages so they follow the Driver Cockpit visual language.
+- Reduced unnecessary card height and page spacing while preserving chart and
+  table readability.
+- Fixed sidebar groups so the active group can be collapsed and opening one
+  group automatically closes the previously open group.
+- Strengthened keyboard focus visibility throughout the dashboard.
+
 ## 3.0.0-beta.2 — 2026-11-05
 
 - Completed the Driver Cockpit light palette so the complete shell, Home
