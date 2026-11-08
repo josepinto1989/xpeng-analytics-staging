@@ -2,8 +2,11 @@ import assert from "node:assert/strict";
 import { chargeCostBreakdown, chargeEstimatedCost, ownershipMaps, upsertChargeCategory, upsertChargeCost, upsertJourneyDetails, upsertJourneyLabel, upsertReminder, validateOwnershipMetadata } from "../src/ownership-metadata.js";
 import { journeySuggestions, reminderState } from "../src/ownership-intelligence.js";
 import { buildChargingCsv, buildJourneysCsv, buildOwnershipCsv } from "../src/ownership-export.js";
+import { resolvedVehicleProfile } from "../src/vehicle-catalog.js";
 
 let ownership=validateOwnershipMetadata();
+ownership=validateOwnershipMetadata({...ownership,vehicleProfile:{variantId:"g6-2025-long"}});
+assert.equal(resolvedVehicleProfile(ownership.vehicleProfile).usableCapacityKwh,80);
 ownership=upsertJourneyLabel(ownership,"journey-1","business");
 ownership=upsertJourneyDetails(ownership,"journey-1",{origin:"Home",destination:"Office",purpose:"Client meeting",comment:"Parking included"});
 ownership=upsertChargeCategory(ownership,"charge-1","home");

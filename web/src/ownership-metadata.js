@@ -5,6 +5,7 @@ const allowedChargeCategories = new Set(["home", "work", "public", "custom"]);
 const allowedCurrencies = new Set(["EUR", "GBP", "USD", "NOK", "SEK", "DKK", "CHF", "PLN", "CZK"]);
 const allowedTariffCategories = new Set(["all", ...allowedChargeCategories]);
 const allowedReminderTypes = new Set(["maintenance", "tyres", "inspection", "insurance", "odometer"]);
+const allowedVehicleVariant = (value) => /^[a-z0-9-]{1,80}$/.test(String(value || "")) ? String(value) : "";
 
 export const JOURNEY_LABELS = ["personal", "business", "commute", "custom"];
 export const CHARGE_CATEGORIES = ["home", "work", "public", "custom"];
@@ -12,7 +13,7 @@ export const TARIFF_CURRENCIES = [...allowedCurrencies];
 export const REMINDER_TYPES = [...allowedReminderTypes];
 
 export function emptyOwnershipMetadata() {
-  return { journeyLabels: [], chargeCategories: [], tariffs: [], activeTariffId: "", reminders: [] };
+  return { journeyLabels: [], chargeCategories: [], tariffs: [], activeTariffId: "", reminders: [], vehicleProfile: { variantId: "", customModel: "", usableCapacityKwh: null } };
 }
 
 export function validateOwnershipMetadata(value) {
@@ -47,7 +48,13 @@ export function validateOwnershipMetadata(value) {
     const id = text(item?.id, 80), type = allowedReminderTypes.has(item?.type) ? item.type : "maintenance", dueDate = /^\d{4}-\d{2}-\d{2}$/.test(String(item?.dueDate || "")) ? String(item.dueDate) : "", dueOdometerKm = Number(item?.dueOdometerKm);
     return id ? { id, type, title: text(item?.title, 120) || "Reminder", dueDate, dueOdometerKm: Number.isFinite(dueOdometerKm) && dueOdometerKm >= 0 && dueOdometerKm <= 2_000_000 ? dueOdometerKm : null, note: text(item?.note, 300), completed: Boolean(item?.completed) } : null;
   }, 100);
-  return { journeyLabels, chargeCategories, tariffs, activeTariffId, reminders };
+  const profileCapacity = Number(input.vehicleProfile?.usableCapacityKwh);
+  const vehicleProfile = {
+    variantId: allowedVehicleVariant(input.vehicleProfile?.variantId),
+    customModel: text(input.vehicleProfile?.customModel, 60),
+    usableCapacityKwh: Number.isFinite(profileCapacity) && profileCapacity >= 20 && profileCapacity <= 200 ? profileCapacity : null,
+  };
+  return { journeyLabels, chargeCategories, tariffs, activeTariffId, reminders, vehicleProfile };
 }
 
 export function ownershipMaps(value) {

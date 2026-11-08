@@ -29,6 +29,7 @@ import { comparePeriods, comparisonDefaults } from "./period-comparison.js";
 import { assessDataProtection } from "./data-protection.js";
 import { buildTyreObservations } from "./tyre-observations.js";
 import { aggregateBands } from "./distribution-bands.js";
+import { VEHICLE_VARIANTS, resolvedVehicleProfile, vehicleProfileLabel } from "./vehicle-catalog.js";
 
 const Replay = React.lazy(() => import("./Replay.jsx"));
 const MyCharts = React.lazy(() => import("./MyCharts.jsx"));
@@ -39,6 +40,15 @@ const navGroups = [
   { key: "vehicle", icon: "battery", items: ["battery", "tyres", "insights", "ownership", "quality"] },
   { key: "reports", icon: "report", items: ["compare", "highlights", "mycharts", "report"] },
 ];
+const simpleNavGroups = [
+  { key: null, items: ["overview", "journeys", "charging", "battery"] },
+];
+const simpleSections = new Set(["overview", "journeys", "charging", "battery", "data"]);
+const viewModeStorageKey = "xpeng-analytics-view-mode";
+const initialViewMode = () => {
+  try { return globalThis.localStorage?.getItem(viewModeStorageKey) === "advanced" ? "advanced" : "simple"; }
+  catch { return "simple"; }
+};
 const sections = navGroups.flatMap((group) => group.items);
 const iconPaths = {
   overview: "M4 13h6V4H4v9Zm10 7h6v-9h-6v9ZM4 20h6v-3H4v3Zm10-13h6V4h-6v3Z",
@@ -347,6 +357,104 @@ function Overview({ data, locale, t, period, maxDate, customRange, openSection, 
   </div>;
 }
 
+function SimpleSectionIntro({ title, body }) {
+  return <div className="simple-section-intro"><span>{title}</span><p>{body}</p></div>;
+}
+
+function SimpleOverview({ data, locale, t, period, maxDate, customRange, openRecord, units }) {
+  const daily=safe(data.daily).filter((row)=>inPeriod(row.date,period,maxDate,customRange));
+  const journeys=newestFirst(safe(data.journeys).filter((row)=>inPeriod(row.date,period,maxDate,customRange)));
+  const charges=newestFirst(safe(data.charges).filter((row)=>inPeriod(row.date,period,maxDate,customRange)));
+  const distance=sum(daily,"distanceKm"),energy=sum(daily,"netEnergyKwh"),consumption=distance?energy/distance*100:null;
+  const chargeEnergy=sum(charges,"batteryEnergyKwh"),costs=charges.map((charge)=>chargeCostBreakdown(charge,data.ownership).cost).filter(Number.isFinite),cost=costs.length?costs.reduce((total,value)=>total+value,0):null;
+  const currency=ownershipMaps(data.ownership).activeTariff?.currency||"";
+  const chart=daily.slice(-30).map((row)=>({...row,label:String(row.date||"").slice(5),distanceDisplay:distanceValue(row.distanceKm,units.system)}));
+  const events=[...journeys.slice(0,3).map((row)=>({kind:"journey",id:row.journeyId,date:row.startedAtUtc,row})),...charges.slice(0,3).map((row)=>({kind:"charge",id:row.chargeId,date:row.startedAtUtc,row}))].sort((a,b)=>String(b.date||"").localeCompare(String(a.date||""))).slice(0,5);
+  return <div className="simple-dashboard">
+    <SimpleSectionIntro title={t("simpleOverviewTitle")} body={t("simpleOverviewBody")}/>
+    <div className="simple-hero-metrics">
+      <Metric tone="mint" label={t("distanceDriven")} value={num(distanceValue(distance,units.system),locale)} unit={` ${distanceUnit(units.system)}`} note={`${journeys.length} ${t("journeysLower")}`}/>
+      <Metric tone="cyan" label={t("averageConsumption")} value={num(consumptionValue(consumption,units.system),locale)} unit={` ${consumptionUnit(units.system)}`} note={t("simpleConsumptionHelp")}/>
+      <Metric tone="amber" label={cost==null?t("chargedEnergy"):t("estimatedChargingCost")} value={cost==null?num(chargeEnergy,locale):num(cost,locale,2)} unit={cost==null?" kWh":` ${currency}`} note={`${charges.length} ${t("chargesLower")}`}/>
+    </div>
+    <div className="simple-overview-grid">
+      <Panel title={t("distanceByDay")} subtitle={t("simpleDistanceChartHelp")}>
+        {chart.length
+          ? <Chart height={260}><BarChart data={chart} margin={{top:12,right:10,left:-14}}><CartesianGrid stroke="var(--grid)" vertical={false}/><XAxis dataKey="label" tick={{fill:"var(--muted)",fontSize:9}}/><YAxis tick={{fill:"var(--muted)",fontSize:9}}/><Tip locale={locale} suffix={` ${distanceUnit(units.system)}`}/><Bar dataKey="distanceDisplay" name={t("distance")} fill={C.mint} radius={[5,5,0,0]}/></BarChart></Chart>
+          : <ChartEmpty t={t}/>
+        }
+      </Panel>
+      <Panel title={t("recentActivity")} subtitle={t("simpleRecentHelp")}>
+        <div className="simple-activity-list">{events.map((event)=><button type="button" key={`${event.kind}-${event.id}`} onClick={()=>openRecord(event.kind==="journey"?"journeys":"charging",event.id)}><i className={event.kind}/><span><strong>{event.kind==="journey"?t("journey"):t("chargingSession")}</strong><small>{dateText(event.date,locale)} · {timeText(event.date,locale)}</small></span><b>{event.kind==="journey"?`${num(distanceValue(event.row.distanceKm,units.system),locale)} ${distanceUnit(units.system)}`:`+${num(event.row.batteryEnergyKwh,locale)} kWh`}</b></button>)}</div>
+      </Panel>
+    </div>
+  </div>;
+}
+
+function SimpleJourneyMap({ journey, locale, t }) {
+  const timeline=useRef({update:()=>{},formatTime:null}).current;
+  return <RouteMap gps={journey.gps} timeline={timeline} telemetry={[]} locale={locale} t={t}/>;
+}
+
+function SimpleJourneys({ data, locale, t, period, maxDate, customRange, selectedId, setSelectedId, units, onRequestRecordDetails }) {
+  const groupView=useMemo(()=>buildJourneyGroupView(data),[data]);
+  const rows=useMemo(()=>{
+    const grouped=groupView.membership,base=safe(data.journeys).filter((row)=>inPeriod(row.date,period,maxDate,customRange)&&!safe(row.tripIds).some((id)=>grouped.has(id)));
+    return newestFirst([...groupView.groups.filter((row)=>inPeriod(row.date,period,maxDate,customRange)),...base]);
+  },[customRange,data.journeys,groupView.groups,groupView.membership,maxDate,period]);
+  const selected=rows.find((row)=>row.journeyId===selectedId)||rows[0];
+  useEffect(()=>{if(selected&&!selected.detailLoaded&&!selected.isManualGroup)onRequestRecordDetails?.({journeyIds:[selected.journeyId]});},[onRequestRecordDetails,selected]);
+  if(!rows.length)return <Empty t={t}/>;
+  return <div className="simple-dashboard">
+    <SimpleSectionIntro title={t("simpleJourneysTitle")} body={t("simpleJourneysBody")}/>
+    <div className="simple-master-detail">
+      <Panel title={t("journeyList")} subtitle={`${rows.length} ${t("journeysLower")}`}><div className="simple-record-list">{rows.map((row)=><button type="button" key={row.journeyId} className={row.journeyId===selected?.journeyId?"is-active":""} onClick={()=>setSelectedId(row.journeyId)}><span><strong>{row.isManualGroup?(row.name||t("unnamedJourneyGroup")):dateText(row.startedAtUtc,locale)}</strong><small>{timeText(row.startedAtUtc,locale)} · {duration(row.durationMinutes,t)} {row.gps?" · GPS":""}</small></span><b>{num(distanceValue(row.distanceKm,units.system),locale)} {distanceUnit(units.system)}</b></button>)}</div></Panel>
+      {selected?<div className="simple-detail-stack"><Panel title={`${dateText(selected.startedAtUtc,locale)} · ${timeText(selected.startedAtUtc,locale)}`} subtitle={duration(selected.durationMinutes,t)}><div className="simple-detail-metrics"><Metric label={t("distance")} value={num(distanceValue(selected.distanceKm,units.system),locale)} unit={` ${distanceUnit(units.system)}`}/><Metric label={t("averageConsumption")} value={num(consumptionValue(selected.consumptionKwh100,units.system),locale)} unit={` ${consumptionUnit(units.system)}`}/><Metric label={t("duration")} value={duration(selected.durationMinutes,t)}/><Metric label={t("maximumSpeed")} value={num(speedValue(selected.maxSpeedKmh,units.system),locale)} unit={` ${speedUnit(units.system)}`}/></div></Panel>{selected.gps?<Panel title={t("journeyRoute")} subtitle={t("simpleMapHelp")}><SimpleJourneyMap journey={selected} locale={locale} t={t}/></Panel>:<div className="simple-no-map"><Icon name="journeys"/><span><strong>{t("noGpsForJourney")}</strong><small>{t("simpleNoGpsHelp")}</small></span></div>}</div>:null}
+    </div>
+  </div>;
+}
+
+function SimpleCharging({ data, locale, t, period, maxDate, customRange, selectedId, setSelectedId, units }) {
+  const rows=newestFirst(safe(data.charges).filter((row)=>inPeriod(row.date||row.startedAtUtc,period,maxDate,customRange)));
+  const selected=rows.find((row)=>row.chargeId===selectedId)||rows[0];
+  if(!rows.length)return <Empty t={t}/>;
+  const cost=selected?chargeCostBreakdown(selected,data.ownership):null,currency=cost?.tariff?.currency||"";
+  return <div className="simple-dashboard">
+    <SimpleSectionIntro title={t("simpleChargingTitle")} body={t("simpleChargingBody")}/>
+    <div className="simple-master-detail">
+      <Panel title={t("chargingHistory")} subtitle={`${rows.length} ${t("sessionsLower")}`}><div className="simple-record-list">{rows.map((row)=><button type="button" key={row.chargeId} className={row.chargeId===selected?.chargeId?"is-active":""} onClick={()=>setSelectedId(row.chargeId)}><span><strong>{dateText(row.startedAtUtc,locale)} <i className={`charge-type-badge type-${String(row.chargeType||"unknown").toLowerCase()}`}>{row.chargeType||"—"}</i></strong><small>{timeText(row.startedAtUtc,locale)} · {duration(row.durationMinutes,t)}</small></span><b>{num(row.batteryEnergyKwh,locale)} kWh</b></button>)}</div></Panel>
+      {selected?<div className="simple-detail-stack"><Panel title={`${dateText(selected.startedAtUtc,locale)} · ${timeText(selected.startedAtUtc,locale)}`} subtitle={`${selected.chargeType||"—"} · ${num(selected.socStartPct,locale,0)} → ${num(selected.socEndPct,locale,0)}%`}><div className="simple-detail-metrics"><Metric label={t("batteryEnergy")} value={num(selected.batteryEnergyKwh,locale)} unit=" kWh"/><Metric label={t("chargeEfficiency")} value={num(selected.efficiencyPct,locale)} unit="%"/><Metric label={t("duration")} value={duration(selected.durationMinutes,t)}/><Metric label={cost?.cost!=null?t("reportEstimatedCost"):t("maximumPower")} value={cost?.cost!=null?num(cost.cost,locale,2):num(selected.maxPowerKw,locale)} unit={cost?.cost!=null?` ${currency}`:" kW"}/></div></Panel><div className="simple-charge-progress"><span><i style={{width:`${Math.max(0,Math.min(100,Number(selected.socStartPct)||0))}%`}}/><b style={{width:`${Math.max(0,Math.min(100,Number(selected.socEndPct)||0))}%`}}/></span><small>{num(selected.socStartPct,locale,0)}%</small><strong>+{num((Number(selected.socEndPct)||0)-(Number(selected.socStartPct)||0),locale,0)}%</strong><small>{num(selected.socEndPct,locale,0)}%</small></div></div>:null}
+    </div>
+  </div>;
+}
+
+function VehicleProfileEditor({ ownership, onSave, t }) {
+  const value=validateOwnershipMetadata(ownership),profile=value.vehicleProfile||{},resolved=resolvedVehicleProfile(profile);
+  const [customModel,setCustomModel]=useState(profile.customModel||""),[customCapacity,setCustomCapacity]=useState(profile.usableCapacityKwh==null?"":String(profile.usableCapacityKwh));
+  useEffect(()=>{setCustomModel(profile.customModel||"");setCustomCapacity(profile.usableCapacityKwh==null?"":String(profile.usableCapacityKwh));},[profile.customModel,profile.usableCapacityKwh,profile.variantId]);
+  const select=(variantId)=>onSave?.(validateOwnershipMetadata({...value,vehicleProfile:{variantId,customModel:variantId==="custom"?customModel:"",usableCapacityKwh:variantId==="custom"?customCapacity:null}}));
+  const saveCustom=()=>onSave?.(validateOwnershipMetadata({...value,vehicleProfile:{variantId:"custom",customModel,usableCapacityKwh:Number(String(customCapacity).replace(",","."))}}));
+  return <div className="vehicle-profile-editor"><div><span><strong>{t("vehicleProfile")}</strong><small>{t("vehicleProfileHelp")}</small></span>{resolved?.sourceUrl?<a href={resolved.sourceUrl} target="_blank" rel="noreferrer">{t("officialSpecification")} ↗</a>:null}</div><select value={profile.variantId||""} onChange={(event)=>select(event.currentTarget.value)}><option value="">{t("selectVehicleVersion")}</option>{VEHICLE_VARIANTS.map((item)=><option key={item.id} value={item.id}>{item.model} · {item.generation} · {item.variant} · {item.usableCapacityKwh} kWh</option>)}<option value="custom">{t("customVehicleVersion")}</option></select>{profile.variantId==="custom"?<div className="vehicle-profile-custom"><input value={customModel} maxLength={60} placeholder={t("vehicleModelPlaceholder")} onChange={(event)=>setCustomModel(event.currentTarget.value)}/><div className="input-with-unit"><input value={customCapacity} inputMode="decimal" placeholder="80" onChange={(event)=>setCustomCapacity(event.currentTarget.value)}/><small>kWh</small></div><button className="secondary-button" type="button" onClick={saveCustom}>{t("save")}</button></div>:null}</div>;
+}
+
+function SimpleBattery({ data, locale, t, period, maxDate, customRange, onSaveOwnership }) {
+  const history=safe(data.battery?.history).filter((row)=>inPeriod(row.date,period,maxDate,customRange)),assessment=useMemo(()=>assessBatteryHealth(history),[history]);
+  const profile=resolvedVehicleProfile(data.ownership?.vehicleProfile),healthPct=profile&&assessment.capacityMedianKwh?assessment.capacityMedianKwh/profile.usableCapacityKwh*100:null;
+  const [exporting,setExporting]=useState(false),[exportError,setExportError]=useState(false);
+  const chart=history.map((row)=>({...row,capacity:row.rollingCapacityKwh??row.capacityKwh}));
+  const exportReport=async()=>{if(!profile||!history.length||exporting)return;setExporting(true);setExportError(false);try{const {downloadBatteryReportPdf}=await import("./battery-report-pdf.js");await downloadBatteryReportPdf({data:{...data,battery:{...data.battery,history}},locale,t});}catch(error){console.error(error);setExportError(true);}finally{setExporting(false);}};
+  return <div className="simple-dashboard simple-battery-page">
+    <SimpleSectionIntro title={t("simpleBatteryTitle")} body={t("simpleBatteryBody")}/>
+    <VehicleProfileEditor ownership={data.ownership} onSave={onSaveOwnership} t={t}/>
+    {!history.length?<div className="simple-battery-empty"><strong>{t("batteryEstimateUnavailable")}</strong><p>{t("batteryEstimateUnavailableHelp")}</p></div>:<>
+      <div className="battery-report-hero"><div className={`battery-health-ring status-${assessment.level}`} style={{"--health":`${Math.max(0,Math.min(100,healthPct||0))}%`}}><span><strong>{healthPct==null?"—":`${num(healthPct,locale)}%`}</strong><small>{t("batteryEstimatedHealth")}</small></span></div><div><span>{t("batteryEstimateSummary")}</span><h2>{num(assessment.capacityMedianKwh,locale)} kWh</h2><p>{profile?`${t("batteryComparedWith")} ${profile.usableCapacityKwh} kWh · ${vehicleProfileLabel(data.ownership.vehicleProfile)}`:t("batterySelectVehiclePrompt")}</p><div className="battery-report-evidence"><span><small>{t("confidence")}</small><strong>{t(`batteryConfidence_${assessment.level}`)}</strong></span><span><small>{t("qualifiedCharges")}</small><strong>{assessment.sampleCount}</strong></span><span><small>{t("observationPeriod")}</small><strong>{assessment.spanDays} {t("daysLower")}</strong></span></div></div><button className="battery-report-button" type="button" disabled={!profile||assessment.sampleCount<1||exporting} onClick={exportReport}><Icon name="report"/><span><strong>{exporting?t("reportGenerating"):t("downloadBatteryReport")}</strong><small>{profile?t("batteryReportButtonHelp"):t("batterySelectVehicleFirst")}</small></span></button></div>
+      <div className="battery-estimate-notice"><strong>{t("batteryEstimateNoticeTitle")}</strong><p>{t("batteryReportDisclaimer")}</p></div>
+      {exportError?<div className="report-error">{t("batteryReportError")}</div>:null}
+      <Panel title={t("batteryCapacityHistory")} subtitle={t("batteryCapacityHistoryHelp")}>{chart.length?<Chart height={260}><LineChart data={chart} margin={{top:15,right:14,left:-8}}><CartesianGrid stroke="var(--grid)" vertical={false}/><XAxis dataKey="date" tick={{fill:"var(--muted)",fontSize:9}}/><YAxis domain={["auto","auto"]} unit=" kWh" tick={{fill:"var(--muted)",fontSize:9}}/><Tip locale={locale} suffix=" kWh"/><Line dataKey="capacity" name={t("estimatedCapacity")} stroke={C.mint} dot={{r:2}} strokeWidth={2}/>{profile?<ReferenceLine y={profile.usableCapacityKwh} stroke={C.amber} strokeDasharray="5 4" label={{value:t("batteryNewReference"),fill:"var(--muted)",fontSize:9}}/>:null}</LineChart></Chart>:<ChartEmpty t={t}/>}</Panel>
+    </>}
+  </div>;
+}
+
 function RouteMap({ gps, timeline, telemetry, t, locale }) {
   const containerRef = useRef(null), statusRef = useRef(null);
   const mapRef = useRef(null), leafletRef = useRef(null), activeMarkerRef = useRef(null);
@@ -620,7 +728,7 @@ function ParkingInvestigator({parking,locale,t}){
   </Panel>;
 }
 
-function Battery({ data, locale, t, period, maxDate, customRange, units }) {
+function Battery({ data, locale, t, period, maxDate, customRange, units, onSaveOwnership }) {
   const battery = data.battery || {};
   const daily = safe(data.daily).filter((row)=>inPeriod(row.date,period,maxDate,customRange));
   const charges = safe(data.charges).filter((row)=>inPeriod(row.date,period,maxDate,customRange));
@@ -645,6 +753,7 @@ function Battery({ data, locale, t, period, maxDate, customRange, units }) {
   const tripTemperatureConsumption=safe(data.trips).filter((row)=>inPeriod(row.date,period,maxDate,customRange)&&Number(row.distanceKm)>=5&&finiteValue(row.batteryTempMaxC)&&finiteValue(row.consumptionKwh100)).map((row)=>({temperature:temperatureValue(row.batteryTempMaxC,units.system),consumption:consumptionValue(row.consumptionKwh100,units.system),distance:distanceValue(row.distanceKm,units.system),date:row.date}));
   const xpengRange=median(rangeSamples.map((row)=>row.impliedFullRangeKm));
   return <>
+    <VehicleProfileEditor ownership={data.ownership} onSave={onSaveOwnership} t={t}/>
     <div className="metric-grid battery-metrics"><Metric tone="mint" label={t("realRange100")} value={num(distanceValue(range100,units.system),locale)} unit={` ${distanceUnit(units.system)}`} note={`${num(consumptionValue(consumption,units.system),locale)} ${consumptionUnit(units.system)} ${t("inPeriodLower")}`} /><Metric tone="violet" label={t("range80to10")} value={num(distanceValue(range70,units.system),locale)} unit={` ${distanceUnit(units.system)}`} note={t("usableWindow70")} /><Metric tone="cyan" label={t("xpengPredictedRange100")} value={num(distanceValue(xpengRange,units.system),locale)} unit={` ${distanceUnit(units.system)}`} note={`${rangeSamples.length} ${t("eligibleSamples")}`}/><Metric tone="mint" label={t("estimatedCapacity")} value={num(capacity,locale)} unit=" kWh" note={`${history.length} ${t("qualifiedChargesLower")}`} /><Metric tone="amber" label={t("relativeSoh")} value={num(history.at(-1)?.relativeSohPct,locale)} unit="%" note={t("notBmsReading")} /><Metric tone="cyan" label={t("parkedObservedDraw")} value={num(parkedWatts,locale)} unit=" W" note={`${num(parkedEnergy,locale)} kWh ${t("measuredWhileParked")}`} /><Metric tone="coral" label={t("parkedLossPerDay")} value={num(parkedLoss,locale,2)} unit={`%/${t("dayShort")}`} note={`${num(parkedLossHour,locale,2)}%/h · ${num(distanceValue(parkedRangeLoss,units.system),locale)} ${distanceUnit(units.system)}/${t("dayShort")}`} /></div>
     <div className="method-note"><strong>{t("calculatedMetrics")}</strong><p>{t("calculatedMetricsHelp")}</p></div>
     <ParkingInvestigator parking={parking} locale={locale} t={t}/>
@@ -1156,7 +1265,7 @@ const ReportSection = memo(Report);
 const QualitySection = memo(Quality);
 
 export default function Dashboard({ data, locale, setLocale, t, busy, progress, error, onChooseAdditional, onChooseHistory, onExport, onExportConsolidatedCsv, onSaveCustomCharts, onSaveJourneyGroups, onSaveOwnership, onRequestRecordDetails, onReset, onCancel, canCancel, persistence, onToggleRememberHistory, onToggleImportReminder, onSetImportReminderDays, onForgetSavedHistory, drive, onConnectDrive, onSaveDrive, onOpenDrive, onDisconnectDrive, onToggleDriveAutoSync, onToggleDriveOriginalArchive, onToggleDriveGpsArchive, onDownloadDriveOriginal, onDeleteDriveOriginal, theme, onToggleTheme, onStartTutorial }) {
-  const [section,setSection]=useState("overview"), [period,setPeriod]=useState("all"), [selectedJourneyId,setSelectedJourneyId]=useState(null), [selectedChargeId,setSelectedChargeId]=useState(null), [selectedChartId,setSelectedChartId]=useState(null), [measurementSystem,setMeasurementSystem]=useState("metric"), [pressureUnit,setPressureUnit]=useState("bar"), [settingsOpen,setSettingsOpen]=useState(false), [searchOpen,setSearchOpen]=useState(false), [compactNavigation,setCompactNavigation]=useState(()=>typeof window!=="undefined"&&window.matchMedia("(max-width: 1050px)").matches);
+  const [section,setSection]=useState("overview"), [viewMode,setViewModeState]=useState(initialViewMode), [period,setPeriod]=useState("all"), [selectedJourneyId,setSelectedJourneyId]=useState(null), [selectedChargeId,setSelectedChargeId]=useState(null), [selectedChartId,setSelectedChartId]=useState(null), [measurementSystem,setMeasurementSystem]=useState("metric"), [pressureUnit,setPressureUnit]=useState("bar"), [settingsOpen,setSettingsOpen]=useState(false), [searchOpen,setSearchOpen]=useState(false), [compactNavigation,setCompactNavigation]=useState(()=>typeof window!=="undefined"&&window.matchMedia("(max-width: 1050px)").matches);
   const [expandedNavGroups,setExpandedNavGroups]=useState(()=>new Set());
   const settingsRef=useRef(null);
   const [minDate,maxDate]=useMemo(()=>{
@@ -1167,6 +1276,8 @@ export default function Dashboard({ data, locale, setLocale, t, busy, progress, 
   const dataCoverage=useMemo(()=>formatTelemetryCoverage(data,locale),[data,locale]);
   const units=useMemo(()=>({system:measurementSystem,pressure:pressureUnit}),[measurementSystem,pressureUnit]);
   const shared={data,locale,t,period,maxDate,customRange,units};
+  const activeNavGroups=viewMode==="simple"?simpleNavGroups:navGroups;
+  const setViewMode=useCallback((next)=>{const mode=next==="advanced"?"advanced":"simple";setViewModeState(mode);try{globalThis.localStorage?.setItem(viewModeStorageKey,mode);}catch{}if(mode==="simple"&&!simpleSections.has(section))setSection("overview");requestAnimationFrame(()=>window.scrollTo({top:0,behavior:"auto"}));},[section]);
   useEffect(()=>{
     if(!settingsOpen)return undefined;
     const dismiss=(event)=>{if(!settingsRef.current?.contains(event.target))setSettingsOpen(false);};
@@ -1189,13 +1300,17 @@ export default function Dashboard({ data, locale, setLocale, t, busy, progress, 
     if(target==="charging"&&event?.sourceId)setSelectedChargeId(event.sourceId);
     openSection(target);
   },[openSection]);
-  const openSearchResult=useCallback((result)=>{if(result.type==="settings"){setSettingsOpen(true);return;}if(result.date){setCustomRange({start:result.date,end:result.date});setPeriod("custom");}if(result.type==="journey"&&result.sourceId)setSelectedJourneyId(result.sourceId);if(result.type==="charge"&&result.sourceId)setSelectedChargeId(result.sourceId);if(result.type==="chart"&&result.sourceId)setSelectedChartId(result.sourceId);openSection(result.section||"overview");},[openSection]);
+  const openSearchResult=useCallback((result)=>{if(result.type==="settings"){setSettingsOpen(true);return;}if(result.date){setCustomRange({start:result.date,end:result.date});setPeriod("custom");}if(result.type==="journey"&&result.sourceId)setSelectedJourneyId(result.sourceId);if(result.type==="charge"&&result.sourceId)setSelectedChargeId(result.sourceId);if(result.type==="chart"&&result.sourceId)setSelectedChartId(result.sourceId);const target=result.section||"overview";if(!simpleSections.has(target))setViewMode("advanced");openSection(target);},[openSection,setViewMode]);
   let content;
-  if(section==="overview")content=<OverviewSection {...shared} openSection={openSection} openRecord={openRecord}/>;
+  if(viewMode==="simple"&&section==="overview")content=<SimpleOverview {...shared} openRecord={openRecord}/>;
+  else if(viewMode==="simple"&&section==="journeys")content=<SimpleJourneys {...shared} selectedId={selectedJourneyId} setSelectedId={setSelectedJourneyId} onRequestRecordDetails={onRequestRecordDetails}/>;
+  else if(viewMode==="simple"&&section==="charging")content=<SimpleCharging {...shared} selectedId={selectedChargeId} setSelectedId={setSelectedChargeId}/>;
+  else if(viewMode==="simple"&&section==="battery")content=<SimpleBattery {...shared} onSaveOwnership={onSaveOwnership}/>;
+  else if(section==="overview")content=<OverviewSection {...shared} openSection={openSection} openRecord={openRecord}/>;
   else if(section==="journeys")content=<JourneysSection {...shared} selectedId={selectedJourneyId} setSelectedId={setSelectedJourneyId} onSaveJourneyGroups={onSaveJourneyGroups} onSaveOwnership={onSaveOwnership} onRequestRecordDetails={onRequestRecordDetails}/>;
   else if(section==="driving")content=<DrivingSection {...shared}/>;
   else if(section==="charging")content=<ChargingSection {...shared} selectedId={selectedChargeId} setSelectedId={setSelectedChargeId} onSaveOwnership={onSaveOwnership} onRequestRecordDetails={onRequestRecordDetails}/>;
-  else if(section==="battery")content=<BatterySection {...shared}/>;
+  else if(section==="battery")content=<BatterySection {...shared} onSaveOwnership={onSaveOwnership}/>;
   else if(section==="tyres")content=<TyresSection {...shared}/>;
   else if(section==="activity")content=<ActivitySection {...shared}/>;
   else if(section==="trends")content=<TrendsSection {...shared}/>;
@@ -1209,16 +1324,17 @@ export default function Dashboard({ data, locale, setLocale, t, busy, progress, 
   else if(section==="quality")content=<QualitySection data={data} locale={locale} t={t}/>;
   else content=<DataSection data={data} locale={locale} t={t} busy={busy} onChooseAdditional={onChooseAdditional} onChooseHistory={onChooseHistory} onExport={onExport} onExportConsolidatedCsv={onExportConsolidatedCsv} onReset={onReset} persistence={persistence} onToggleRememberHistory={onToggleRememberHistory} onToggleImportReminder={onToggleImportReminder} onSetImportReminderDays={onSetImportReminderDays} onForgetSavedHistory={onForgetSavedHistory} drive={drive} onConnectDrive={onConnectDrive} onSaveDrive={onSaveDrive} onOpenDrive={onOpenDrive} onDisconnectDrive={onDisconnectDrive} onToggleDriveAutoSync={onToggleDriveAutoSync} onToggleDriveOriginalArchive={onToggleDriveOriginalArchive} onToggleDriveGpsArchive={onToggleDriveGpsArchive} onDownloadDriveOriginal={onDownloadDriveOriginal} onDeleteDriveOriginal={onDeleteDriveOriginal}/>;
   const filteredSections=["overview","journeys","driving","charging","battery","tyres","activity","trends","insights"];
-  const utilityActions=<div className={`dashboard-utility-actions ${compactNavigation?"is-mobile":"is-sidebar"}`}><button className="topbar-data-action search-trigger" title={t("globalSearch")} type="button" onClick={()=>setSearchOpen(true)} aria-label={`${t("globalSearch")} (${t("searchShortcut")})`}><Icon name="search"/><span>{t("globalSearch")}</span><kbd>{compactNavigation?"⌕":"Ctrl K"}</kbd></button><button className={`topbar-data-action ${section==="data"?"is-active":""}`} title={t("addMoreData")} aria-label={t("addMoreData")} type="button" onClick={()=>openSection("data")}><Icon name="data"/><span>{t("addMoreData")}</span></button><div className="settings-popover" ref={settingsRef}><button className={`settings-trigger ${settingsOpen?"is-active":""}`} title={t("settings")} type="button" aria-label={t("settings")} aria-expanded={settingsOpen} aria-controls="dashboard-settings" onClick={()=>setSettingsOpen((current)=>!current)}><Icon name="settings"/><span>{t("settings")}</span></button>{settingsOpen?<div className="settings-panel" id="dashboard-settings" role="dialog" aria-label={t("settings")}><header><span><strong>{t("settings")}</strong><small>{t("settingsHelp")}</small></span><button type="button" onClick={()=>setSettingsOpen(false)}>{t("close")}</button></header><button className="settings-theme-button" type="button" onClick={onToggleTheme} aria-label={theme==="light"?t("darkTheme"):t("lightTheme")}><span><strong>{t("theme")}</strong><small>{theme==="light"?t("light"):t("dark")}</small></span><i className={theme==="dark"?"is-dark":""}/></button><label><span>{t("language")}</span><select value={locale} onChange={(event)=>setLocale(event.target.value)}><option value="pt-PT">Português</option><option value="en">English</option></select></label><label><span>{t("measurementUnits")}</span><select value={measurementSystem} onChange={(event)=>setMeasurementSystem(event.currentTarget.value)}><option value="metric">{t("metricUnits")}</option><option value="imperial">{t("imperialUnits")}</option></select></label><label><span>{t("tyrePressureUnit")}</span><select value={pressureUnit} onChange={(event)=>setPressureUnit(event.currentTarget.value)}><option value="bar">bar</option><option value="psi">psi</option></select></label><button className="settings-tutorial-button" type="button" onClick={()=>{setSettingsOpen(false);onStartTutorial?.();}}><span><strong>{t("tutorialOpen")}</strong><small>{t("tutorialRestartHelp")}</small></span><b aria-hidden="true">→</b></button></div>:null}</div>{!compactNavigation?<a className="sidebar-utility-link" href="https://ko-fi.com/mpinto" target="_blank" rel="noreferrer" title={t("supportCta")} aria-label={t("supportCta")}><Icon name="support"/><span>{t("supportCta")}</span></a>:null}</div>;
+  const modeSwitch=<div className="view-mode-switch" role="group" aria-label={t("viewMode")}><button type="button" className={viewMode==="simple"?"is-active":""} onClick={()=>setViewMode("simple")}><span>{t("simpleMode")}</span><small>{t("simpleModeHelp")}</small></button><button type="button" className={viewMode==="advanced"?"is-active":""} onClick={()=>setViewMode("advanced")}><span>{t("advancedMode")}</span><small>{t("advancedModeHelp")}</small></button></div>;
+  const utilityActions=<div className={`dashboard-utility-actions ${compactNavigation?"is-mobile":"is-sidebar"}`}><button className="topbar-data-action search-trigger" title={t("globalSearch")} type="button" onClick={()=>setSearchOpen(true)} aria-label={`${t("globalSearch")} (${t("searchShortcut")})`}><Icon name="search"/><span>{t("globalSearch")}</span><kbd>{compactNavigation?"⌕":"Ctrl K"}</kbd></button><button className={`topbar-data-action ${section==="data"?"is-active":""}`} title={t("addMoreData")} aria-label={t("addMoreData")} type="button" onClick={()=>openSection("data")}><Icon name="data"/><span>{t("addMoreData")}</span></button><div className="settings-popover" ref={settingsRef}><button className={`settings-trigger ${settingsOpen?"is-active":""}`} title={t("settings")} type="button" aria-label={t("settings")} aria-expanded={settingsOpen} aria-controls="dashboard-settings" onClick={()=>setSettingsOpen((current)=>!current)}><Icon name="settings"/><span>{t("settings")}</span></button>{settingsOpen?<div className="settings-panel" id="dashboard-settings" role="dialog" aria-label={t("settings")}><header><span><strong>{t("settings")}</strong><small>{t("settingsHelp")}</small></span><button type="button" onClick={()=>setSettingsOpen(false)}>{t("close")}</button></header>{modeSwitch}<button className="settings-theme-button" type="button" onClick={onToggleTheme} aria-label={theme==="light"?t("darkTheme"):t("lightTheme")}><span><strong>{t("theme")}</strong><small>{theme==="light"?t("light"):t("dark")}</small></span><i className={theme==="dark"?"is-dark":""}/></button><label><span>{t("language")}</span><select value={locale} onChange={(event)=>setLocale(event.target.value)}><option value="pt-PT">Português</option><option value="en">English</option></select></label><label><span>{t("measurementUnits")}</span><select value={measurementSystem} onChange={(event)=>setMeasurementSystem(event.currentTarget.value)}><option value="metric">{t("metricUnits")}</option><option value="imperial">{t("imperialUnits")}</option></select></label><label><span>{t("tyrePressureUnit")}</span><select value={pressureUnit} onChange={(event)=>setPressureUnit(event.currentTarget.value)}><option value="bar">bar</option><option value="psi">psi</option></select></label><button className="settings-tutorial-button" type="button" onClick={()=>{setSettingsOpen(false);onStartTutorial?.();}}><span><strong>{t("tutorialOpen")}</strong><small>{t("tutorialRestartHelp")}</small></span><b aria-hidden="true">→</b></button></div>:null}</div>{!compactNavigation?<a className="sidebar-utility-link" href="https://ko-fi.com/mpinto" target="_blank" rel="noreferrer" title={t("supportCta")} aria-label={t("supportCta")}><Icon name="support"/><span>{t("supportCta")}</span></a>:null}</div>;
   return <div className="dashboard-shell cockpit-shell">
     <aside className="dashboard-sidebar">
       <button className="dashboard-brand" type="button" onClick={()=>openSection("overview")} aria-label={`XPENG Analytics — ${t("nav_overview")}${dataCoverage?` — ${dataCoverage}`:""}`}><span className="brand-mark"><img src={`${import.meta.env.BASE_URL}assets/xpeng-analytics-mark-96.png`} alt="" /></span><span className="dashboard-brand-copy"><strong>XPENG</strong><small>Analytics</small>{dataCoverage?<span className="brand-data-range" title={`${t("dataCoverage")}: ${dataCoverage}`}>{dataCoverage}</span>:null}</span></button>
-      <nav aria-label={t("navigation")}>{navGroups.map((group)=>{const active=group.items.includes(section),expanded=!group.key||expandedNavGroups.has(group.key);return <div className={`nav-group ${group.key?"is-collapsible":"nav-group-primary"} ${active?"is-active":""} ${expanded?"is-expanded":""}`} data-tutorial={group.key||"overview"} key={group.key||"primary"}>{group.key?<button className="nav-group-toggle" type="button" aria-expanded={expanded} onClick={()=>{if(expanded)toggleNavGroup(group.key);else if(active)setExpandedNavGroups(new Set([group.key]));else openSection(group.items[0]);}}><Icon name={group.icon}/><span>{t(`navGroup_${group.key}`)}</span><b aria-hidden="true">⌄</b></button>:null}<div className="nav-group-items">{group.items.map((item)=><button key={item} type="button" className={section===item?"is-active":""} aria-current={section===item?"page":undefined} onClick={()=>openSection(item)}><Icon name={item}/><span>{t(`nav_${item}`)}</span></button>)}</div></div>;})}</nav>
+      <nav aria-label={t("navigation")}>{activeNavGroups.map((group)=>{const active=group.items.includes(section),expanded=!group.key||expandedNavGroups.has(group.key);return <div className={`nav-group ${group.key?"is-collapsible":"nav-group-primary"} ${active?"is-active":""} ${expanded?"is-expanded":""}`} data-tutorial={group.key||"overview"} key={group.key||"primary"}>{group.key?<button className="nav-group-toggle" type="button" aria-expanded={expanded} onClick={()=>{if(expanded)toggleNavGroup(group.key);else if(active)setExpandedNavGroups(new Set([group.key]));else openSection(group.items[0]);}}><Icon name={group.icon}/><span>{t(`navGroup_${group.key}`)}</span><b aria-hidden="true">⌄</b></button>:null}<div className="nav-group-items">{group.items.map((item)=><button key={item} type="button" className={section===item?"is-active":""} aria-current={section===item?"page":undefined} onClick={()=>openSection(item)}><Icon name={item}/><span>{t(`nav_${item}`)}</span></button>)}</div></div>;})}</nav>
       <div className="sidebar-bottom">{!compactNavigation?utilityActions:null}<a className="sidebar-kofi" href="https://ko-fi.com/mpinto" target="_blank" rel="noreferrer">{t("supportCta")}</a><div className="privacy-mini"><i/><span><strong>{t("localOnly")}</strong><small>{persistence.enabled ? t("savedOnThisDevice") : t("sessionOnly")}</small></span></div><small className="sidebar-version">XPENG Analytics · v{APP_VERSION}</small></div>
     </aside>
     <main className="dashboard-main">
-      <header className="dashboard-topbar"><div><span className="dashboard-eyebrow">{t("dashboard")}</span><h1>{t(`section_${section}`)}</h1><p>{t(`section_${section}_help`)}</p></div><time>{new Intl.DateTimeFormat(locale,{day:"numeric",month:"long",year:"numeric"}).format(new Date())}</time>{compactNavigation?utilityActions:null}</header>
-      <label className="mobile-nav"><span>{t("navigation")}</span><select name="dashboard-navigation" value={section} onChange={(event)=>openSection(event.currentTarget.value)}>{navGroups.map((group)=>group.key?<optgroup key={group.key} label={t(`navGroup_${group.key}`)}>{group.items.map((item)=><option key={item} value={item}>{t(`nav_${item}`)}</option>)}</optgroup>:group.items.map((item)=><option key={item} value={item}>{t(`nav_${item}`)}</option>))}</select>{dataCoverage?<small className="mobile-data-range" title={t("dataCoverage")}>{dataCoverage}</small>:null}</label>
+      <header className="dashboard-topbar"><div><span className="dashboard-eyebrow">{t("dashboard")}</span><h1>{t(`section_${section}`)}</h1><p>{t(`section_${section}_help`)}</p></div><div className="dashboard-topbar-actions">{modeSwitch}<time>{new Intl.DateTimeFormat(locale,{day:"numeric",month:"long",year:"numeric"}).format(new Date())}</time></div>{compactNavigation?utilityActions:null}</header>
+      <label className="mobile-nav"><span>{t("navigation")}</span><select name="dashboard-navigation" value={section} onChange={(event)=>openSection(event.currentTarget.value)}>{activeNavGroups.map((group)=>group.key?<optgroup key={group.key} label={t(`navGroup_${group.key}`)}>{group.items.map((item)=><option key={item} value={item}>{t(`nav_${item}`)}</option>)}</optgroup>:group.items.map((item)=><option key={item} value={item}>{t(`nav_${item}`)}</option>))}</select>{dataCoverage?<small className="mobile-data-range" title={t("dataCoverage")}>{dataCoverage}</small>:null}</label>
       {filteredSections.includes(section)?<PeriodBar period={period} setPeriod={setPeriod} customRange={customRange} setCustomRange={setCustomRange} minDate={minDate} maxDate={maxDate} t={t}/>:null}
       {busy?<div className="dashboard-progress"><div className="dashboard-progress-heading"><strong>{Math.round(progress.percent||0)}%</strong><span>{t(phaseKeys[progress.phase]||"loadingEngine")}{progress.detail?` · ${progress.detail}`:""}</span>{canCancel?<button className="cancel-processing" type="button" onClick={onCancel}>{t("cancelProcessing")}</button>:null}</div>{["drive_backup_save","drive_original_archive","drive_history_refresh"].includes(progress.phase)?<small className="drive-progress-warning">{t("driveLongOperationWarning")}</small>:null}<div><i style={{width:`${Math.max(3,progress.percent||0)}%`}}/></div></div>:null}
       {error?<div className="dashboard-error">{t(`error_${error}`)}</div>:null}<div className="dashboard-content">{content}</div><footer className="site-footer dashboard-footer"><span>{t("unofficial")}</span><span>{t("ownerLabel")}: Miguel Pinto</span><span>v{APP_VERSION}</span><a href={`${import.meta.env.BASE_URL}about.html`} target="_blank" rel="noreferrer">{t("aboutProject")}</a><a href={`${import.meta.env.BASE_URL}privacy.html`} target="_blank" rel="noreferrer">{t("privacyPolicy")}</a><a href={ISSUE_URL} target="_blank" rel="noreferrer">{t("reportIssue")}</a><a href="https://ko-fi.com/mpinto" target="_blank" rel="noreferrer">Ko-fi</a></footer>

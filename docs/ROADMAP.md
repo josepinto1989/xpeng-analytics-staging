@@ -1,6 +1,18 @@
 # Roadmap
 
-## Version 3 design track — Phase 23: Driver Cockpit (Beta)
+## Version 3 design track — Phase 24: Simple mode and battery report (Beta)
+
+- [x] Make a simpler, owner-friendly experience the default without removing advanced analytics.
+- [x] Keep a permanently visible Simple / Advanced mode switch.
+- [x] Create focused Overview, Journeys, Charging, and Battery screens for Simple mode.
+- [x] Preserve the complete v2.8 analysis, Data, Drive, RAW, GPX, report, and export workflows in Advanced mode.
+- [x] Let the owner select the XPENG model and usable-battery version, with a custom fallback.
+- [x] Store the selected vehicle profile in `.xpeng`, remembered history, and Drive backups.
+- [x] Add an exportable battery-condition PDF with confidence, evidence, reference capacity, and clear non-BMS disclaimers.
+- [ ] Validate the battery estimate across more models, climates, and long owner histories before production.
+- [ ] Complete desktop and mobile owner testing of both modes before promoting version 3.
+
+### Phase 23: Driver Cockpit foundation (Beta)
 
 - [x] Establish the selected Driver Cockpit visual system on the Beta channel.
 - [x] Reduce primary navigation to Home, Driving, Energy, Vehicle, and Reports.

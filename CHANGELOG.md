@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.0.0-beta.4 — 2026-11-08
+
+- Added a default Simple mode with focused Overview, Journeys, Charging, and Battery screens.
+- Kept the complete existing product available through an always-visible Advanced mode.
+- Added an XPENG vehicle and usable-battery profile stored with portable history metadata.
+- Added an estimated battery-condition report with confidence, evidence, official/reference capacity, and explicit non-BMS disclaimers.
+- Updated the version 3 roadmap for validation before production.
+
 All notable public changes are documented here.
 
 ## 3.0.0-beta.3 — 2026-11-06
