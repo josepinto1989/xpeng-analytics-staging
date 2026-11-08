@@ -5,6 +5,7 @@
 - [x] Make a simpler, owner-friendly experience the default without removing advanced analytics.
 - [x] Keep a permanently visible Simple / Advanced mode switch.
 - [x] Create focused Overview, Journeys, Charging, and Battery screens for Simple mode.
+- [x] Rebalance Simple mode with essential charts and supporting metrics rather than an ultra-minimal summary.
 - [x] Preserve the complete v2.8 analysis, Data, Drive, RAW, GPX, report, and export workflows in Advanced mode.
 - [x] Let the owner select the XPENG model and usable-battery version, with a custom fallback.
 - [x] Store the selected vehicle profile in `.xpeng`, remembered history, and Drive backups.

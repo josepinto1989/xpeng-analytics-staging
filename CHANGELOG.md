@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.0.0-beta.5 — 2026-11-08
+
+- Rebalanced Simple mode to show useful analysis without exposing the complete technical dashboard.
+- Added distance and energy charts plus five key metrics to the Simple overview.
+- Added journey energy metrics, synchronised speed and power charts, and the GPS map.
+- Added complete charging-session metrics and the power/SOC curve.
+- Added range, parked draw, parked loss, and estimated capacity to the Simple battery page.
+
 ## 3.0.0-beta.4 — 2026-11-08
 
 - Added a default Simple mode with focused Overview, Journeys, Charging, and Battery screens.
