@@ -15,6 +15,8 @@
 - [x] Recover journey SOC from segment or telemetry detail when the aggregate is incomplete.
 - [x] Add AC/DC filters and a dedicated temperature view to Simple Charging.
 - [x] Keep the Simple sidebar controls visible on shorter desktop screens.
+- [x] Limit Simple Journeys to GPS-matched routes and use a map-left,
+  charts-right analysis layout with elevation directly below the map.
 - [x] Consolidate classification and notes into a compact metadata drawer rather than permanent dashboard blocks.
 - [x] Preserve the complete v2.8 analysis, Data, Drive, RAW, GPX, report, and export workflows in Advanced mode.
 - [x] Let the owner select the XPENG model and usable-battery version, with a custom fallback.

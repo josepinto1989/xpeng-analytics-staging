@@ -69,3 +69,18 @@ A separate crop was not required: the 1600 × 1000 implementation capture and th
   desktop viewport.
 
 final result: passed
+
+## Beta 8 GPS journey composition
+
+- Viewport: 1600 × 1000 CSS px, device scale factor 1.
+- State: light theme, Simple mode, Journeys, representative GPS route.
+- Visible journeys: 44; every visible record carried a GPS match.
+- Desktop columns: approximately 461 px for the map and 510 px for charts.
+
+The map and chart columns share the same top alignment. Speed and power remain
+stacked on the right, while elevation is contained beneath the map on the
+left. The layout has no horizontal page overflow and collapses to one column
+below 1180 px. Elevation distance labels were shortened to one decimal place
+after the first capture exposed raw floating-point values.
+
+final result: passed

@@ -62,6 +62,20 @@ visual system.
 8. At a desktop viewport around 760 px high, confirm Search, Data, and Settings
    remain visible at the bottom of the sidebar.
 
+### Beta 8 — GPS journey workspace
+
+1. Open Journeys in Simple mode and confirm every listed journey has a GPS
+   route. Journeys without matched GPS data should remain available in
+   Advanced mode only.
+2. On a wide desktop screen, confirm the route map is on the left and the
+   speed and power charts are stacked on the right.
+3. Confirm the elevation profile appears directly below the map and its
+   distance labels use compact values.
+4. Hover the speed or power chart and confirm the live marker and elevation
+   reference continue to follow the selected moment.
+5. Reduce the browser width and confirm the map and charts stack vertically
+   without horizontal overflow.
+
 ## Open the Beta
 
 <https://josepinto1989.github.io/xpeng-analytics-staging/>
