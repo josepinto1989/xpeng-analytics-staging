@@ -137,7 +137,7 @@ const initialTheme = () => {
   } catch {
     // Storage can be unavailable in private or restricted browser contexts.
   }
-  return BETA_CHANNEL ? "dark" : "light";
+  return "light";
 };
 const isNativeHistory = (buffer) => {
   const bytes = new Uint8Array(buffer, 0, Math.min(buffer.byteLength, 8));

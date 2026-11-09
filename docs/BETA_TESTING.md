@@ -42,6 +42,26 @@ visual system.
    essential Overview content is shown.
 7. Repeat in light and dark themes and at desktop, tablet, and phone widths.
 
+### Beta 7 — Simple mode refinements
+
+1. Open the Beta in a clean browser profile and confirm the initial theme is
+   light. Switch to dark, reload, and confirm the preference is remembered.
+2. On Simple Home, confirm distance and energy share one daily chart and the
+   introductory marketing copy is no longer shown.
+3. In Simple Journeys, test one journey with GPS and one without GPS. The route
+   should appear only when it exists, with no empty GPS placeholder.
+4. Confirm the selected journey shows its initial and final SOC. This should
+   also work when SOC must be recovered from the journey segments.
+5. In Simple Charging, switch between All, AC, and DC. Confirm the selected
+   list and session update, the redundant SOC bar is gone, and charging curve
+   plus battery-temperature panels are present.
+6. Open Simple Battery and confirm it starts directly with the vehicle and
+   battery assessment rather than an additional introductory block.
+7. Open Highlights and Replay from Simple navigation and confirm both retain
+   their complete interactions.
+8. At a desktop viewport around 760 px high, confirm Search, Data, and Settings
+   remain visible at the bottom of the sidebar.
+
 ## Open the Beta
 
 <https://josepinto1989.github.io/xpeng-analytics-staging/>

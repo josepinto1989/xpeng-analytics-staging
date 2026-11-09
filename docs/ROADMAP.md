@@ -9,6 +9,12 @@
 - [x] Select the Analytical Workspace direction for the shared version 3 visual system.
 - [x] Rebuild Journeys as the reference workspace: persistent record list, four priority metrics, a dominant route view, and Overview / Energy / Driving / Battery / Technical tabs.
 - [x] Reuse the same Journey workspace in Simple mode with only the essential Overview content.
+- [x] Default to the light theme while preserving each owner's saved theme preference.
+- [x] Refine Simple Home, Journeys, Charging, and Battery after owner review.
+- [x] Add Highlights and Replay to the Simple navigation without removing their full functionality.
+- [x] Recover journey SOC from segment or telemetry detail when the aggregate is incomplete.
+- [x] Add AC/DC filters and a dedicated temperature view to Simple Charging.
+- [x] Keep the Simple sidebar controls visible on shorter desktop screens.
 - [x] Consolidate classification and notes into a compact metadata drawer rather than permanent dashboard blocks.
 - [x] Preserve the complete v2.8 analysis, Data, Drive, RAW, GPX, report, and export workflows in Advanced mode.
 - [x] Let the owner select the XPENG model and usable-battery version, with a custom fallback.

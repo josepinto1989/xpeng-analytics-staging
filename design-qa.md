@@ -46,4 +46,26 @@ A separate crop was not required: the 1600 × 1000 implementation capture and th
 
 - P3: a future map-style provider could offer a darker basemap closer to the concept, but only if its usage terms and privacy behavior fit the project.
 
+## Beta 7 Simple-mode review
+
+- Viewport: 1440 × 760 CSS px, device scale factor 1.
+- Data: representative owner `.xpeng` history covering journeys, GPS and
+  charging sessions.
+- Theme: light default, with the existing dark preference retained.
+- Screens reviewed: Home, Journeys, Charging, Highlights and Replay.
+
+### Verified outcomes
+
+- The five Home metrics remain readable above one combined distance/energy
+  chart; the separate introductory block no longer consumes vertical space.
+- Simple navigation exposes Home, Journeys, Charging, Battery, Highlights and
+  Replay, while the three utility controls remain inside the 760 px viewport.
+- Journey SOC rendered as `25% → 22%` in the representative test and the
+  no-GPS state no longer creates an empty map card.
+- Charging history uses the translated title, exposes All/AC/DC filters and
+  presents charging-curve and battery-temperature panels side by side.
+- Removed map instruction copy does not leave a spacing gap in the toolbar.
+- No horizontal overflow or overlapping controls were observed in the tested
+  desktop viewport.
+
 final result: passed

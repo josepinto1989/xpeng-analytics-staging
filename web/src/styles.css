@@ -1195,3 +1195,22 @@ body{background:var(--app-canvas)}
 @media(max-width:1180px){.cockpit-shell .master-detail,.cockpit-shell .simple-master-detail{grid-template-columns:230px minmax(0,1fr)}.workspace-context-strip{grid-template-columns:repeat(2,minmax(0,1fr))}.workspace-context-strip>span:nth-child(2){border-right:0}.workspace-context-strip>span:nth-child(-n+2){border-bottom:1px solid var(--workspace-rule)}}
 @media(max-width:900px){.cockpit-shell .master-detail,.cockpit-shell .simple-master-detail{grid-template-columns:1fr}.cockpit-shell .master-detail>.dash-panel:first-child,.cockpit-shell .simple-master-detail>.dash-panel:first-child{position:static;max-height:320px}.workspace-metrics,.workspace-secondary-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.workspace-metrics .dash-metric:nth-child(2),.workspace-secondary-metrics .dash-metric:nth-child(2){border-right:0}.workspace-metrics .dash-metric:nth-child(-n+2),.workspace-secondary-metrics .dash-metric:nth-child(-n+2){border-bottom:1px solid var(--workspace-rule)}.workspace-grid{grid-template-columns:1fr}}
 @media(max-width:560px){.workspace-heading{padding:14px 15px}.workspace-content{padding:10px}.workspace-metrics .dash-metric,.workspace-secondary-metrics .dash-metric{min-height:82px;padding:12px}.workspace-metrics .dash-metric strong{font-size:22px}.workspace-context-strip{grid-template-columns:1fr}.workspace-context-strip>span{border-right:0;border-bottom:1px solid var(--workspace-rule)!important}.workspace-context-strip>span:last-child{border-bottom:0!important}.workspace-tabs{gap:13px;padding-inline:11px}.workspace-map .route-map{height:280px}}
+
+/* Simple workspace refinements */
+.cockpit-shell .dashboard-sidebar{overflow:hidden}
+.cockpit-shell .dashboard-brand{flex:none}
+.cockpit-shell .dashboard-sidebar nav{flex:1;min-height:0;overflow-y:auto}
+.cockpit-shell .sidebar-bottom{flex:none}
+.beta-channel-banner+.cockpit-shell .dashboard-sidebar{top:38px;height:calc(100dvh - 38px)}
+.simple-charge-charts{display:grid;gap:14px}.simple-charge-charts.has-temperature{grid-template-columns:repeat(2,minmax(0,1fr))}
+.simple-charge-filters{display:flex;gap:4px;flex-wrap:nowrap}.simple-charge-filters button{min-width:38px;padding:6px 8px}
+.simple-tool-page{max-width:1500px}.simple-tool-page>.lifetime-highlights,.simple-tool-page>.replay-page{width:100%}
+@media(max-height:760px) and (min-width:1051px){
+  .cockpit-shell .dashboard-sidebar{padding-top:12px;padding-bottom:10px}
+  .cockpit-shell .dashboard-brand{min-height:45px;padding-bottom:10px}
+  .cockpit-shell .dashboard-brand .brand-mark{width:32px;height:32px}.cockpit-shell .dashboard-brand .brand-mark img{width:27px;height:27px}
+  .cockpit-shell .dashboard-sidebar nav{padding-top:8px}
+  .cockpit-shell .dashboard-sidebar nav button{min-height:35px;padding-block:6px}
+  .cockpit-shell .sidebar-bottom{gap:6px;padding-top:6px}.cockpit-shell .sidebar-version{display:none}
+}
+@media(max-width:900px){.simple-charge-charts.has-temperature{grid-template-columns:1fr}}
