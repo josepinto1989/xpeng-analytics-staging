@@ -6,11 +6,16 @@
 - [x] Keep a permanently visible Simple / Advanced mode switch.
 - [x] Create focused Overview, Journeys, Charging, and Battery screens for Simple mode.
 - [x] Rebalance Simple mode with essential charts and supporting metrics rather than an ultra-minimal summary.
+- [x] Select the Analytical Workspace direction for the shared version 3 visual system.
+- [x] Rebuild Journeys as the reference workspace: persistent record list, four priority metrics, a dominant route view, and Overview / Energy / Driving / Battery / Technical tabs.
+- [x] Reuse the same Journey workspace in Simple mode with only the essential Overview content.
+- [x] Consolidate classification and notes into a compact metadata drawer rather than permanent dashboard blocks.
 - [x] Preserve the complete v2.8 analysis, Data, Drive, RAW, GPX, report, and export workflows in Advanced mode.
 - [x] Let the owner select the XPENG model and usable-battery version, with a custom fallback.
 - [x] Store the selected vehicle profile in `.xpeng`, remembered history, and Drive backups.
 - [x] Add an exportable battery-condition PDF with confidence, evidence, reference capacity, and clear non-BMS disclaimers.
 - [ ] Validate the battery estimate across more models, climates, and long owner histories before production.
+- [ ] Apply the same workspace hierarchy to Charging, Battery, Driving, Tyres, Activity, Reports, and Data after the Journey reference is owner-approved.
 - [ ] Complete desktop and mobile owner testing of both modes before promoting version 3.
 
 ### Phase 23: Driver Cockpit foundation (Beta)

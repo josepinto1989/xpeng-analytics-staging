@@ -7,7 +7,7 @@ export default defineConfig({
     port: 4174,
     strictPort: true,
     watch: {
-      ignored: ["**/public/processor/**"],
+      ignored: ["**/public/processor/**", "**/.chrome-*/**"],
     },
   },
   preview: {

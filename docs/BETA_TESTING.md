@@ -23,6 +23,25 @@ official site is not changed by this test.
 6. Check English and Portuguese, metric and imperial units, bar and PSI, light
    and dark themes, desktop and mobile layouts.
 
+### Beta 6 — Analytical Workspace
+
+Journeys is now the reference implementation for the selected version 3
+visual system.
+
+1. Open Journeys in Advanced mode and confirm the record list stays visible
+   beside the selected journey on a desktop display.
+2. Confirm distance, duration, average consumption, and maximum speed update
+   when another journey is selected.
+3. Open Overview, Energy, Driving, Battery, and Technical. Confirm every tab
+   changes content without losing the selected journey.
+4. On Overview, hover the speed and power charts and confirm the route marker
+   follows the corresponding position on the map.
+5. Open Journey details, edit classification or notes, close the drawer, and
+   confirm the workspace remains compact.
+6. Switch to Simple mode. Confirm the same workspace remains but only the
+   essential Overview content is shown.
+7. Repeat in light and dark themes and at desktop, tablet, and phone widths.
+
 ## Open the Beta
 
 <https://josepinto1989.github.io/xpeng-analytics-staging/>

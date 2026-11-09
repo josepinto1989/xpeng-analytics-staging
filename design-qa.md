@@ -1,65 +1,49 @@
-# Design QA — Journey Replay analytical workbench
+# Design QA — Analytical Workspace
 
-## Evidence
-
-- Source visual truth: private design reference reviewed during implementation;
-  the reference image is intentionally not committed.
-- Source pixels: 1488 × 1058 PNG.
-- Browser-rendered implementation: local production preview reviewed during the
-  implementation session; captures containing private test data are
-  intentionally not committed.
-- Desktop viewport: 1265 × 710 CSS px, device scale 1.
-- Mobile viewport: requested 390 × 844 CSS px; browser content measured 375 CSS px wide, with `scrollWidth === clientWidth === 375`.
-- State: English, light theme, real imported XPENG journey, replay running and then paused. The available persisted journey did not include a matched GPX route, so the map region was verified in its supported no-route state while the unchanged Leaflet route component remained covered by route-sync tests.
-- Primary interactions tested: open Replay, select/start journey, live playback, pause, select 3× and 10×, and seek the timeline.
-- Browser console: no warnings or errors after the interaction pass.
-
-## Full-view comparison
-
-The rendered implementation preserves the selected concept's defining composition: a roughly 60/40 map-to-telemetry split, compact row-based live telemetry, a technical top-down vehicle status panel, a full-width event timeline with integrated playback controls, and four synchronized analytical charts below. It intentionally retains the product's existing sidebar and page shell, which the standalone concept image omitted.
-
-The comparison was performed from the source mock and the desktop in-app-browser captures shown in the same design-validation session. A second focused capture covered the event timeline and four-chart workbench.
-
-## Required fidelity surfaces
-
-- Fonts and typography: existing XPENG Analytics type stack retained; hierarchy, compact labels, tabular values, and small chart annotations match the selected analytical direction. No clipping or unintended wrapping was visible.
-- Spacing and layout rhythm: the 60/40 upper grid, thin separators, dense telemetry rows, timeline rhythm, and four-column chart grid match the source. Existing application sidebar width is preserved as an intentional shell constraint.
-- Colors and visual tokens: existing off-white, navy, mint, violet, cyan, coral, muted text, and hairline tokens are reused consistently. Status and event colors remain semantically distinct.
-- Image quality and asset fidelity: the former photorealistic driving scene was removed. A dedicated transparent top-down generic SUV asset is sharp, correctly cropped, brandless, and integrated without a visible raster box.
-- Copy and content: English and pt-PT strings are complete and translation parity passes. Labels reflect actual telemetry and clearly separate calculated reconstruction from official vehicle data.
-
-## Focused region comparison
-
-- Telemetry and vehicle status: values align on a disciplined three-column row grid; progress bars are compact and the vehicle/status list remains legible at desktop and mobile widths.
-- Event timeline: the playhead, timestamps, five event lanes, event markers, 1×/2×/3×/5×/10× controls, and seek slider remain synchronized and readable.
-- Charts: speed, power, pedal positions, and steering each have a dedicated chart with a moving cursor, active data point, and live value synchronized to the map and replay timeline.
-
-## Comparison history
-
-1. Initial implementation finding — P2: at the start of playback, the playhead label overlapped the event labels and the native range control rendered as a heavy dark bar.
-   - Fix: split timeline labels from the plotting region, anchored the playhead inside the plot, and added consistent WebKit/Firefox range-track and thumb styling.
-   - Post-fix evidence: the second in-app-browser capture shows the `00:01` playhead fully inside the plotting area and a thin muted seek track with a mint thumb.
-2. Mobile verification — no horizontal overflow at 375 CSS px; telemetry becomes a vertical reading sequence, the vehicle remains fully visible, and the lower workbench stacks safely.
-3. Playback follow-up — added 5× and 10× rates, then strengthened chart synchronization with a visible playhead, active points, and current values. A browser pass confirmed 10× advances the shared replay clock and updates all chart readouts.
+- Source visual truth: `C:\Users\seque\.codex\generated_images\01a12b81-3ce6-7523-b932-ee99ceac04eb\exec-1e3668f0-b30d-4e88-833e-12ef182dcd74.png`
+- Implementation capture: `C:\Users\seque\Documents\XPENG\xpeng-local-insights\analytical-workspace-implementation.png`
+- Side-by-side evidence: `C:\Users\seque\Documents\XPENG\xpeng-local-insights\design-qa-analytical-workspace.png`
+- Viewport: 1600 × 1000 CSS px, device scale factor 1
+- Source pixels: 1487 × 1058; normalized to 1600 × 1000 for the comparison board
+- Implementation pixels: 1600 × 1000
+- State: dark theme, Advanced mode, Journeys, first journey with GPS, Overview tab
 
 ## Findings
 
-- No actionable P0, P1, or P2 visual or interaction findings remain.
+No actionable P0, P1 or P2 differences remain.
 
-## Open questions
+- Fonts and typography: the existing XPENG Analytics type system is retained. Heading scale, dense UI copy, tab hierarchy and four primary figures match the reference hierarchy without introducing a new font dependency.
+- Spacing and layout rhythm: the persistent record column, compact journey rows, four-column metric strip, tab row, dominant map and stacked charts follow the selected Analytical Workspace composition. Existing period, classification, search and export controls remain above the workspace as intentional product controls.
+- Colors and visual tokens: dark surfaces, quiet separators, mint active states and restrained cyan/amber/violet semantic accents match the selected direction and continue to use the app's established tokens. Light mode uses the same hierarchy through the existing token system.
+- Image quality and asset fidelity: the product logo and real OpenStreetMap tiles remain native assets. The reference's stylized dark map was not substituted for the working map because the implementation must preserve the real interactive route, controls and attribution.
+- Copy and content: the reference hierarchy is preserved with real application labels, localized copy and imported journey values.
+- Interaction states: Overview, Energy, Driving, Battery and Technical each become selected and expose content. Simple mode reuses the same workspace with only the essential Overview content. The metadata drawer opens independently.
+- Responsiveness: the layout has explicit 1180, 900 and 560 px adaptations. Record list and analysis stack vertically below 900 px, while metric and context strips reduce from four to two and then one column.
 
-- None blocking. A future polish pass may use a GPX-backed fixture for a pixel-level comparison of the populated Leaflet map state, but route synchronization and matching are already covered by automated tests.
+## Comparison history
+
+1. Initial capture was blocked by the first-use tutorial overlay. The QA flow now dismisses the tutorial before capture.
+2. The journey classification and notes occupied two large blocks above the workspace. They were consolidated into one collapsed `Journey details` drawer.
+3. The journey-list unit rendered as `$km` after the structural refactor. The JSX text boundary was corrected and the production build rerun.
+4. Final capture shows the selected record column, primary metric strip, tabs and route workspace without horizontal overflow (`bodyWidth === viewport === 1600`).
+
+## Focused-region evidence
+
+A separate crop was not required: the 1600 × 1000 implementation capture and the normalized side-by-side board keep the navigation, list rows, metric strip, tabs, map controls and typography readable in one view.
 
 ## Implementation checklist
 
-- [x] Replace the 3D/videogame scene with the selected analytical workbench.
-- [x] Integrate real telemetry, vehicle states, event markers, charts, playback rates, and seek behavior.
-- [x] Add a brandless technical top-down SUV asset.
-- [x] Verify desktop and mobile layouts.
-- [x] Run translation parity, replay tests, full test suite, and production build.
+- [x] Preserve all existing imported-data calculations.
+- [x] Add shared analytical-workspace structure.
+- [x] Reuse the structure in Simple and Advanced journey modes.
+- [x] Group advanced detail into Overview, Energy, Driving, Battery and Technical.
+- [x] Keep GPS chart-to-map synchronization.
+- [x] Keep real filters, export and manual journey grouping.
+- [x] Verify desktop overflow and responsive breakpoints.
+- [x] Run production build and complete automated test suite.
 
 ## Follow-up polish
 
-- P3: consider adding hover descriptions to event marker types if user testing shows that the color legend alone is insufficient.
+- P3: a future map-style provider could offer a darker basemap closer to the concept, but only if its usage terms and privacy behavior fit the project.
 
 final result: passed
